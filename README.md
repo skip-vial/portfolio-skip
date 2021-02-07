@@ -8,6 +8,7 @@ Additionally, multiple Jungle playlists will be compared to each other in order 
 
 ### Corpus
 This corpus uses genre-based Spotify Playlists
+<pre>
 - Jungle:
   - Junglist Massive / UK Jungle 	(345 songs)
   - JUNGLE / OLDSCHOOL DNB 		(603 songs)
@@ -21,6 +22,7 @@ This corpus uses genre-based Spotify Playlists
   - Liquid Drum and Bass 2021 		(162 songs)
 - Heavy DnB:
   - Darkstep (updated) 			(2301 songs)
-	- Techstep / Darkstep 		(468 songs)
+  - Techstep / Darkstep 		(468 songs)
+</pre>
 
 (Representativeness of the genres in this corpus has not been described as the corpus is not finalized yet)
