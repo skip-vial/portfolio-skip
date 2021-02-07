@@ -7,16 +7,20 @@ This corpus analysis attempts to answer these questions by comparing Jungle musi
 Additionally, multiple Jungle playlists will be compared to each other in order to investigate the diversity of the genre. The diversity of Drum & Bass music can also be measured since various subgenres have been chosen. Significant differences will surely arise between the different subgenres of Drum & Bass, such as differences in acousticness, valence, energy and loudness.
 
 ### Corpus
+This corpus uses genre-based Spotify Playlists
 - Jungle:
-  - Junglist Massive / UK Jungle (345 songs)
-  - JUNGLE / OLDSCHOOL DNB (603 songs)
+  - Junglist Massive / UK Jungle 	(345 songs)
+  - JUNGLE / OLDSCHOOL DNB 		(603 songs)
   - JUNGLE / RAGGA DNB / JUNGLE REVIVAL (116 songs)
 - Ragga DnB: 
-  - Drum and Bass / Jungle / Raggae (144 songs)
+  - Drum and Bass / Jungle / Raggae 	(144 songs)
+  - Strictly Ragga Drum and Bass	(185 songs)
 - Light DnB:
-  - Liquid Drum and Bass (100 songs)
+  - Liquid Drum and Bass 		(100 songs)
+  - Chill DnB 				(159 songs)
+  - Liquid Drum and Bass 2021 		(162 songs)
 - Heavy DnB:
-  - Darkstep (updated) (2301 songs)
-	- Techstep / Darkstep (468 songs)
+  - Darkstep (updated) 			(2301 songs)
+	- Techstep / Darkstep 		(468 songs)
 
 (Representativeness of the genres in this corpus has not been described as the corpus is not finalized yet)
