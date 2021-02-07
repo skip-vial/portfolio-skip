@@ -19,6 +19,4 @@ Additionally, multiple Jungle playlists will be compared to each other in order 
   - Darkstep (updated) (2301 songs)
 	- Techstep / Darkstep (468 songs)
 
-  
-  
-  
+(Representativeness of the genres in this corpus has not been described as the corpus is not finalized yet)
