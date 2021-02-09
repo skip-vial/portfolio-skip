@@ -1,5 +1,5 @@
 ---
-title: "Comparing Jungle and Drum & Bass"
+title: "Comparing Jungle to Drum & Bass music"
 author: "Skip Vial"
 date: "2/9/2021"
 output: html_document
