@@ -4,6 +4,7 @@ This corpus analysis attempts to answer these questions by comparing Jungle musi
 - Ragga Drum & Bass. This subgenre was inspired by the original Ragga Jungle style, which was very popular at the time. Expected is that this genre is most similar to the original Jungle music.
 - Light Drum & Bass. Also called Liquid Drum & Bass. Many harmonic and melodic grooves are used, as well as samples from funk, jazz, soul, R&B. Expected is that this subgenre has significant differences from Jungle. Overall, Liquid Drum & Bass is known for its positive energy. This would mean that the acousticness and/or valence of songs are different than in Jungle music.
 - Heavy Drum & Bass. This subgenre has a higher average BPM than most other subgenres and has a general ‘dark’ mood, which is realized with deeper basslines and more industrial, hardcore (electronic) melodies. 
+
 Additionally, multiple Jungle playlists will be compared to each other in order to investigate the diversity of the genre. The diversity of Drum & Bass music can also be measured since various subgenres have been chosen. Significant differences will surely arise between the different subgenres of Drum & Bass, such as differences in acousticness, valence, energy and loudness.
 
 ### Corpus
