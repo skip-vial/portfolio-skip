@@ -20,6 +20,8 @@ library(plotly)
 
 ### Introduction
 
+*Background*
+
 The music genre ‘Jungle’ emerged in the 1990s and is viewed as the direct originating point for the newer music genre named ‘Drum & Bass’ (emerged mid 1990s). These two genres are commonly used as synonyms for one another. Almost 30 years have passed since these genres were developed. During this time the Drum & Bass genre has grown significantly in terms of exposure and now knows many subgenres, while Jungle music did not make the same growth and lost popularity. What caused this turn of events? Has Drum & Bass become more popular because of its diversity? Can we still use the terms ‘Jungle’ and ‘Drum & Bass’ as synonyms or has Drum & Bass developed in such a way that it has become completely different from its originating point? This corpus analysis attempts to answer these questions by comparing Jungle music to various subgenres of Drum & Bass music:
 
 - Ragga Drum & Bass. This subgenre was inspired by the original Ragga Jungle style, which was very popular at the time. Expected is that this genre is most similar to the original Jungle music.
@@ -131,6 +133,8 @@ instrumentalness_per_genre
 
 Instrumentalness predicts whether a track contains vocals or not. A value of 0.5 or higher represents instrumental tracks which means that the track contains no vocal content. Figure 1 shows an expected pattern between the genres. The genres Jungle and RaggaDnB are very similar and both contain mostly vocal tracks. As HeavyDnB is known for its darker mood and deep basslines, which usually means that there is little room for vocals in a track. Results in Figure 1 confirm this. Lastly, instrumentalness values for the LightDnB genre show an even distribution. This indicates that there is a large variety of tracks within this genre regarding vocals.
 
+
+
 ### What are the differences of valence and energy values between genres? 
 
 ```{r echo=FALSE}
@@ -139,7 +143,7 @@ Instrumentalness predicts whether a track contains vocals or not. A value of 0.5
 energy_valence <- ggplot(all_music, 
        aes(energy, 
            valence, 
-           color = loudness)) + # speechiness, acousticness, liveness?
+           color = mode)) + # speechiness, acousticness, liveness?
   geom_point(position = "jitter", alpha = 0.4, shape = 20) +
   theme_light() +
   facet_wrap(~ category) +
@@ -151,31 +155,28 @@ energy_valence <- ggplot(all_music,
     caption = "Figure 2"
   )
 
-ggplotly(energy_valence)
+energy_valence
 
-
-# Simple boxplot tempo
-ggplot(all_music, aes(y = category,
-                      x = tempo)) +
-  geom_path(alpha = 0.3, 
-               fill = "grey20", 
-               color = "grey20", 
-               outlier.color = "grey", 
-               position = "dodge",
-               arrow = arrow(length = unit(1.5, "mm"), type = "closed")) +
-  theme_light()
-
-
-# Attempt area plot tempo vs ...
-
-all_music %>% ggplot(aes(x = tempo, 
-                         y = danceability, 
-                         color = category)) +
-  geom_jitter() + 
-  geom_smooth()
 
 ```
 
 ***
 
 The first genre that stands out in Figure 2 is HeavyDnB. As predicted, it becomes very clear that this genre consists mostly of tracks with very high energy and a general low valence. On the other hand, expected was that this genre would see a general high valence. However, Figure 2 shows that this is not the case. The amount of tracks with a high valence is approximately equal to the amount of tracks of the HeavyDnB genre. For Jungle and RaggaDnB was expected that these genres are very similar to each other. Both genres have a tendency for high energy and high valence. Lastly, mode was investigated to find additional patterns. Interestingly, mode is evenly distributed in every genre. This indicates that it does not have a significant effect on the valence or energy of a Drum & Bass track.
+
+### What about tempo differences?
+
+```{r}
+
+# Attempt area plot tempo vs loudness
+
+all_music %>% ggplot(aes(x = loudness, 
+                         y = tempo,
+                         color = category
+                         )) +
+  geom_point(alpha = 0.5)  +
+    scale_y_continuous(
+      limits = c(170, 180))
+
+```
+
