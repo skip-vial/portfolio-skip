@@ -2,23 +2,23 @@
 title: "Comparing Jungle to Drum & Bass music"
 author: "Skip Vial"
 date: "2/9/2021"
-output: html_document
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-
-setwd("~/Persoonlijk/CLC/Jaar 2/04 - Computational Musicology/R/portfolio-skip")
 
 library(tidyverse)
 library(spotifyr)
 library(usethis)
-library(ggplot2)
 library(ggthemes)
-
+library(compmus)
+library(remotes)
+library(plotly)
 ```
 
-## Introduction
+### Introduction
 
 The music genre ‘Jungle’ emerged in the 1990s and is viewed as the direct originating point for the newer music genre named ‘Drum & Bass’ (emerged mid 1990s). These two genres are commonly used as synonyms for one another. Almost 30 years have passed since these genres were developed. During this time the Drum & Bass genre has grown significantly in terms of exposure and now knows many subgenres, while Jungle music did not make the same growth and lost popularity. What caused this turn of events? Has Drum & Bass become more popular because of its diversity? Can we still use the terms ‘Jungle’ and ‘Drum & Bass’ as synonyms or has Drum & Bass developed in such a way that it has become completely different from its originating point? This corpus analysis attempts to answer these questions by comparing Jungle music to various subgenres of Drum & Bass music:
 
@@ -26,169 +26,86 @@ The music genre ‘Jungle’ emerged in the 1990s and is viewed as the direct or
 - Light Drum & Bass. Also called Liquid Drum & Bass. Many harmonic and melodic grooves are used, as well as samples from funk, jazz, soul, R&B. Expected is that this subgenre has significant differences from Jungle. Overall, Liquid Drum & Bass is known for its positive energy. This would mean that the acousticness and/or valence of songs are different than in Jungle music.
 - Heavy Drum & Bass. This subgenre has a higher average BPM than most other subgenres and has a general ‘dark’ mood, which is realized with deeper basslines and more industrial, hardcore (electronic) melodies.
 
-Additionally, multiple Jungle playlists will be compared to each other in order to investigate the diversity of the genre. The diversity of Drum & Bass music can also be measured since various subgenres have been chosen. Significant differences will surely arise between the different subgenres of Drum & Bass, such as differences in acousticness, valence, energy and loudness.
 
-### Corpus
+*** 
+ 
+Corpus
 
 This corpus uses genre-based Spotify Playlists.
 
-<pre>
 - Jungle:
-  - Junglist Massive / UK Jungle 	      (345 songs)
-  - JUNGLE / RAGGA DNB / JUNGLE REVIVAL (116 songs)
+  - JUNGLE / RAGGA DNB / JUNGLE REVIVAL
+  - Tracks: 125
   
 - Ragga DnB: 
-  - Drum and Bass / Jungle / Raggae   	(144 songs)
-  - Strictly Ragga Drum and Bass	      (185 songs)
-  - Ragga Drum and Bass                 (115 songs)
+  - Ragga Drum and Bass
+  - Tracks: 115
   
 - Light DnB:
-  - Liquid Drum and Bass 		            (100 songs)
-  - Chill DnB 			                  	(159 songs)
-  - Liquid Drum and Bass 2021 	      	(162 songs)
+  - Liquid Drum and Bass 	
+  - Tracks: 100
   
 - Heavy DnB:
-  - Techstep / Darkstep 		            (468 songs)
-</pre>
+  - Neurofunk Drum & Bass
+  - NEUROFUNK 2021 // Updated Weekly
+  - Tracks: 113
+  
 
 ```{r echo=FALSE}
 
 ### Import Spotify Playlists ###
-Jungle1 <- get_playlist_audio_features(" ", "3qoHsqpeRIysyXqxRQRe1Z")
-Jungle2 <- get_playlist_audio_features("", "4Xq7CHKa693iezbOXH8NOQ")
+Jungle <- get_playlist_audio_features("", "4Xq7CHKa693iezbOXH8NOQ")
 
-Ragga1 <- get_playlist_audio_features("", "7lfls6vQ6X2qdVW0aaCSvN")
-Ragga2 <- get_playlist_audio_features("", "1B2nEv2484e6sRFsigENkR")
-Ragga3 <- get_playlist_audio_features("", "0ix8qCnYCiu4w8OcnK0Uqu")
+RaggaDnB <- get_playlist_audio_features("", "0ix8qCnYCiu4w8OcnK0Uqu")
 
-Light1 <- get_playlist_audio_features("", "5ABMzUESx7K7EyowE5kFCl")
-Light2 <- get_playlist_audio_features("", "27hhIcqsrmDEfWPP7DMOQL")
-Light3 <- get_playlist_audio_features("", "3OYBpiQl7zOac5j5nGl3mu")
+LightDnB <- get_playlist_audio_features("", "5ABMzUESx7K7EyowE5kFCl")
 
-HeavyDnB <- get_playlist_audio_features("", "19IBl2pEpZb7TRbw1guSDk")
+Heavy1 <- get_playlist_audio_features("", "7Dx1mjAUeV8ElB5FERajkl")
+Heavy2 <- get_playlist_audio_features("", "0Po1Xhn50bsrQwyjXWMMKJ")
+
 
 ### Combine datasets per subgenre ###
-Jungle <-
+HeavyDnB <-
   bind_rows(
-    Jungle1 %>% mutate(category = "Jungle1"),
-    Jungle2 %>% mutate(category = "Jungle2")
+    Heavy1 %>% mutate(category = "Heavy1"),
+    Heavy2 %>% mutate(category = "Heavy2")
   )
 
-RaggaDnB <-
-  bind_rows(
-    Ragga1 %>% mutate(category = "Ragga1"),
-    Ragga2 %>% mutate(category = "Ragga2"),
-    Ragga3 %>% mutate(category = "Ragga3")
-  )
-
-LightDnB <-
-  bind_rows(
-    Light1 %>% mutate(category = "Light1"),
-    Light2 %>% mutate(category = "Light2"),
-    Light3 %>% mutate(category = "Light3")
-  )
-
-### Delete useless columns ###
-Jungle = subset(Jungle, select = -c(playlist_id, playlist_img, playlist_owner_name,
-                                    playlist_owner_id, track.id, analysis_url,
-                                    is_local, primary_color, added_by.href,
-                                    added_by.id, added_by.type, added_by.uri,
-                                    added_by.external_urls.spotify, track.artists,
-                                    track.available_markets, track.disc_number,
-                                    track.episode, track.explicit, track.href,
-                                    track.is_local, track.preview_url, track.track,
-                                    track.track_number, track.type, track.uri,
-                                    track.album.album_type, track.album.artists,
-                                    track.album.available_markets, track.album.href,
-                                    track.album.id, track.album.images, 
-                                    track.album.name, added_at,
-                                    track.album.release_date_precision,
-                                    track.album.total_tracks, track.album.type,
-                                    track.album.uri, track.album.external_urls.spotify,
-                                    track.external_ids.isrc, 
-                                    track.external_urls.spotify, video_thumbnail.url
-                                    ))
-
-RaggaDnB = subset(RaggaDnB, select = -c(playlist_id, playlist_img, playlist_owner_name,
-                                    playlist_owner_id, track.id, analysis_url,
-                                    is_local, primary_color, added_by.href,
-                                    added_by.id, added_by.type, added_by.uri,
-                                    added_by.external_urls.spotify, track.artists,
-                                    track.available_markets, track.disc_number,
-                                    track.episode, track.explicit, track.href,
-                                    track.is_local, track.preview_url, track.track,
-                                    track.track_number, track.type, track.uri,
-                                    track.album.album_type, track.album.artists,
-                                    track.album.available_markets, track.album.href,
-                                    track.album.id, track.album.images, 
-                                    track.album.name, added_at,
-                                    track.album.release_date_precision,
-                                    track.album.total_tracks, track.album.type,
-                                    track.album.uri, track.album.external_urls.spotify,
-                                    track.external_ids.isrc, 
-                                    track.external_urls.spotify, video_thumbnail.url
-                                    ))
-
-LightDnB = subset(LightDnB, select = -c(playlist_id, playlist_img, playlist_owner_name,
-                                    playlist_owner_id, track.id, analysis_url,
-                                    is_local, primary_color, added_by.href,
-                                    added_by.id, added_by.type, added_by.uri,
-                                    added_by.external_urls.spotify, track.artists,
-                                    track.available_markets, track.disc_number,
-                                    track.episode, track.explicit, track.href,
-                                    track.is_local, track.preview_url, track.track,
-                                    track.track_number, track.type, track.uri,
-                                    track.album.album_type, track.album.artists,
-                                    track.album.available_markets, track.album.href,
-                                    track.album.id, track.album.images, 
-                                    track.album.name, added_at,
-                                    track.album.release_date_precision,
-                                    track.album.total_tracks, track.album.type,
-                                    track.album.uri, track.album.external_urls.spotify,
-                                    track.external_ids.isrc, 
-                                    track.external_urls.spotify, video_thumbnail.url
-                                    ))
-
-HeavyDnB = subset(HeavyDnB, select = -c(playlist_id, playlist_img, playlist_owner_name,
-                                    playlist_owner_id, track.id, analysis_url,
-                                    is_local, primary_color, added_by.href,
-                                    added_by.id, added_by.type, added_by.uri,
-                                    added_by.external_urls.spotify, track.artists,
-                                    track.available_markets, track.disc_number,
-                                    track.episode, track.explicit, track.href,
-                                    track.is_local, track.preview_url, track.track,
-                                    track.track_number, track.type, track.uri,
-                                    track.album.album_type, track.album.artists,
-                                    track.album.available_markets, track.album.href,
-                                    track.album.id, track.album.images, 
-                                    track.album.name, added_at,
-                                    track.album.release_date_precision,
-                                    track.album.total_tracks, track.album.type,
-                                    track.album.uri, track.album.external_urls.spotify,
-                                    track.external_ids.isrc, 
-                                    track.external_urls.spotify, video_thumbnail.url
-                                    ))
-
-### Final dataframes ###
-View(Jungle)
-View(RaggaDnB)
-View(LightDnB)
-View(HeavyDnB)
 
 ### Final final universal dataframe ###
 all_music <-
   bind_rows(
-    Jungle %>% mutate(category = "Jungle"),
-    RaggaDnB %>% mutate(category = "RaggaDnB"),
-    LightDnB %>% mutate(category = "LightDnB"),
-    HeavyDnB %>% mutate(category = "HeavyDnB")
+      Jungle %>% mutate(category = "Jungle"),
+      RaggaDnB %>% mutate(category = "RaggaDnB"),
+      LightDnB %>% mutate(category = "LightDnB"),
+      HeavyDnB %>% mutate(category = "HeavyDnB")
   )
+
+### Delete useless columns ###
+all_music = subset(all_music, select = -c(playlist_id, playlist_img, playlist_owner_name,
+                                    playlist_owner_id, track.id, analysis_url,
+                                    is_local, primary_color, added_by.href,
+                                    added_by.id, added_by.type, added_by.uri,
+                                    added_by.external_urls.spotify, track.artists,
+                                    track.available_markets, track.disc_number,
+                                    track.episode, track.explicit, track.href,
+                                    track.is_local, track.preview_url, track.track,
+                                    track.track_number, track.type, track.uri,
+                                    track.album.album_type, track.album.artists,
+                                    track.album.available_markets, track.album.href,
+                                    track.album.id, track.album.images, 
+                                    track.album.name, added_at,
+                                    track.album.release_date_precision,
+                                    track.album.total_tracks, track.album.type,
+                                    track.album.uri, track.album.external_urls.spotify,
+                                    track.external_ids.isrc, 
+                                    track.external_urls.spotify, video_thumbnail.url
+                                    ))
+
 
 ```
 
-### Data Visualization
-
-A number of graphs will be designed in order to gain better insight in the data. First, interesting differences between the genres arise when looking at the instrumentalness per genre, showed in Figure 1 below.
+### How often are voices used in each genre?
 
 ```{r echo=FALSE}
 
@@ -210,9 +127,11 @@ instrumentalness_per_genre
 
 ```
 
+***
+
 Instrumentalness predicts whether a track contains vocals or not. A value of 0.5 or higher represents instrumental tracks which means that the track contains no vocal content. Figure 1 shows an expected pattern between the genres. The genres Jungle and RaggaDnB are very similar and both contain mostly vocal tracks. As HeavyDnB is known for its darker mood and deep basslines, which usually means that there is little room for vocals in a track. Results in Figure 1 confirm this. Lastly, instrumentalness values for the LightDnB genre show an even distribution. This indicates that there is a large variety of tracks within this genre regarding vocals.
 
-Other variables that might vary between the four genres are valence and energy. These variables are shown in the following graph.
+### What are the differences of valence and energy values between genres? 
 
 ```{r echo=FALSE}
 
@@ -220,10 +139,10 @@ Other variables that might vary between the four genres are valence and energy. 
 energy_valence <- ggplot(all_music, 
        aes(energy, 
            valence, 
-           color = mode_name)) + # speechiness, acousticness, liveness?
+           color = loudness)) + # speechiness, acousticness, liveness?
   geom_point(position = "jitter", alpha = 0.4, shape = 20) +
-  facet_wrap(~ category) +
   theme_light() +
+  facet_wrap(~ category) +
     labs(     
     x = "Energy",
     y = "Valence",
@@ -232,7 +151,31 @@ energy_valence <- ggplot(all_music,
     caption = "Figure 2"
   )
 
-energy_valence
+ggplotly(energy_valence)
+
+
+# Simple boxplot tempo
+ggplot(all_music, aes(y = category,
+                      x = tempo)) +
+  geom_path(alpha = 0.3, 
+               fill = "grey20", 
+               color = "grey20", 
+               outlier.color = "grey", 
+               position = "dodge",
+               arrow = arrow(length = unit(1.5, "mm"), type = "closed")) +
+  theme_light()
+
+
+# Attempt area plot tempo vs ...
+
+all_music %>% ggplot(aes(x = tempo, 
+                         y = danceability, 
+                         color = category)) +
+  geom_jitter() + 
+  geom_smooth()
+
 ```
+
+***
 
 The first genre that stands out in Figure 2 is HeavyDnB. As predicted, it becomes very clear that this genre consists mostly of tracks with very high energy and a general low valence. On the other hand, expected was that this genre would see a general high valence. However, Figure 2 shows that this is not the case. The amount of tracks with a high valence is approximately equal to the amount of tracks of the HeavyDnB genre. For Jungle and RaggaDnB was expected that these genres are very similar to each other. Both genres have a tendency for high energy and high valence. Lastly, mode was investigated to find additional patterns. Interestingly, mode is evenly distributed in every genre. This indicates that it does not have a significant effect on the valence or energy of a Drum & Bass track.
