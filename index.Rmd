@@ -1,7 +1,7 @@
 ---
 title: "Comparing Jungle to Drum & Bass music"
 author: "Skip Vial"
-date: "2/9/2021"
+date: "Februari 2021"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
@@ -25,13 +25,14 @@ library(plotly)
 The music genre ‘Jungle’ emerged in the 1990s and is viewed as the direct originating point for the newer music genre named ‘Drum & Bass’ (emerged mid 1990s). These two genres are commonly used as synonyms for one another. Almost 30 years have passed since these genres were developed. During this time the Drum & Bass genre has grown significantly in terms of exposure and now knows many subgenres, while Jungle music did not make the same growth and lost popularity. What caused this turn of events? Has Drum & Bass become more popular because of its diversity? Can we still use the terms ‘Jungle’ and ‘Drum & Bass’ as synonyms or has Drum & Bass developed in such a way that it has become completely different from its originating point? This corpus analysis attempts to answer these questions by comparing Jungle music to various subgenres of Drum & Bass music:
 
 - Ragga Drum & Bass. This subgenre was inspired by the original Ragga Jungle style, which was very popular at the time. Expected is that this genre is most similar to the original Jungle music.
+
 - Light Drum & Bass. Also called Liquid Drum & Bass. Many harmonic and melodic grooves are used, as well as samples from funk, jazz, soul, R&B. Expected is that this subgenre has significant differences from Jungle. Overall, Liquid Drum & Bass is known for its positive energy. This would mean that the acousticness and/or valence of songs are different than in Jungle music.
+
 - Heavy Drum & Bass. This subgenre has a higher average BPM than most other subgenres and has a general ‘dark’ mood, which is realized with deeper basslines and more industrial, hardcore (electronic) melodies.
 
-
 *** 
- 
-Corpus
+
+*Corpus*
 
 This corpus uses genre-based Spotify Playlists.
 
@@ -107,6 +108,8 @@ all_music = subset(all_music, select = -c(playlist_id, playlist_img, playlist_ow
 
 ```
 
+
+
 ### How often are voices used in each genre?
 
 ```{r echo=FALSE}
@@ -127,6 +130,7 @@ instrumentalness_per_genre <- ggplot(all_music,
   
 instrumentalness_per_genre
 
+
 ```
 
 ***
@@ -135,7 +139,7 @@ Instrumentalness predicts whether a track contains vocals or not. A value of 0.5
 
 
 
-### What are the differences of valence and energy values between genres? 
+### Is a certain genre more positive or energetic than other genres?
 
 ```{r echo=FALSE}
 
@@ -143,7 +147,7 @@ Instrumentalness predicts whether a track contains vocals or not. A value of 0.5
 energy_valence <- ggplot(all_music, 
        aes(energy, 
            valence, 
-           color = mode)) + # speechiness, acousticness, liveness?
+           color = mode_name)) + # speechiness, acousticness, liveness?
   geom_point(position = "jitter", alpha = 0.4, shape = 20) +
   theme_light() +
   facet_wrap(~ category) +
@@ -164,11 +168,13 @@ energy_valence
 
 The first genre that stands out in Figure 2 is HeavyDnB. As predicted, it becomes very clear that this genre consists mostly of tracks with very high energy and a general low valence. On the other hand, expected was that this genre would see a general high valence. However, Figure 2 shows that this is not the case. The amount of tracks with a high valence is approximately equal to the amount of tracks of the HeavyDnB genre. For Jungle and RaggaDnB was expected that these genres are very similar to each other. Both genres have a tendency for high energy and high valence. Lastly, mode was investigated to find additional patterns. Interestingly, mode is evenly distributed in every genre. This indicates that it does not have a significant effect on the valence or energy of a Drum & Bass track.
 
+
+
 ### What about tempo differences?
 
 ```{r}
 
-# Attempt area plot tempo vs loudness
+# Attempt plot tempo vs loudness
 
 all_music %>% ggplot(aes(x = loudness, 
                          y = tempo,
@@ -180,3 +186,261 @@ all_music %>% ggplot(aes(x = loudness,
 
 ```
 
+***
+
+In construction
+
+
+
+### Chromagram Comparison 1 - What does the general buildup of a Light Drum & Bass track look like?
+
+```{r}
+
+# Get track information
+fall_to_you <-
+  get_tidy_audio_analysis("1ObLc50qTIp8gF1Lg2GimH") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+
+# Make the chromagram. Use manhattan, euclidean, chebyshev
+chroma_fall_to_you <- fall_to_you %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+# Add lines and text at key moments
+chroma_fall_to_you +
+  geom_vline(xintercept = 89,
+             color = "red",
+             size = 0.8) +
+  geom_vline(xintercept = 200,
+             color = "red",
+             size = 0.8) + 
+  geom_vline(xintercept = 223,
+             color = "red",
+             size = 0.8) +
+  geom_vline(xintercept = 356,
+             color = "red",
+             size = 0.8) +
+  annotate(geom="text", 
+          x=89, 
+          y="A", 
+          label="First drop",
+          color="red",
+          fontface = 2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=200, 
+          y="B", 
+          label="Breakdown",
+          color="red",
+          fontface=2,
+          hjust=1) +
+  annotate(geom="text", 
+          x=223, 
+          y="A", 
+          label="Second drop",
+          color="red",
+          fontface=2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=356, 
+          y="B", 
+          label="Breakdown",
+          color="red",
+          fontface=2,
+          hjust=1)
+
+
+```
+
+***
+
+*Track: Falls to you VIP - Calibre*
+
+Komt nog
+
+### Chromagram Comparison 2 - And for Heavy Drum & Bass?
+
+```{r}
+
+# Get track information
+faceless <-
+  get_tidy_audio_analysis("2m40HRbLhNf3FeH9ntqQWw") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+
+
+
+# Make the chromagram. Use manhattan, euclidean, chebyshev
+chroma_faceless <- faceless %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+# Add lines and text at key moments
+chroma_faceless +
+  geom_vline(xintercept = 40,
+             color = "red",
+             size = 0.8) +
+  geom_vline(xintercept = 110,
+             color = "red",
+             size = 0.8) + 
+  geom_vline(xintercept = 133,
+             color = "red",
+             size = 0.8) +
+  geom_vline(xintercept = 207,
+             color = "red",
+             size = 0.8) +
+  annotate(geom="text", 
+          x=40, 
+          y="A", 
+          label="First drop",
+          color="red",
+          fontface = 2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=110, 
+          y="B", 
+          label="Breakdown",
+          color="red",
+          fontface=2,
+          hjust=1) +
+  annotate(geom="text", 
+          x=133, 
+          y="A", 
+          label="Second drop",
+          color="red",
+          fontface=2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=207, 
+          y="B", 
+          label="Breakdown",
+          color="red",
+          fontface=2,
+          hjust=1)
+
+
+```
+
+***
+
+*Track: Faceless - Phace, Was A Be*
+
+Uitleggg
+
+
+
+### Chromagram Comparison 3 - Now what is different in the buildup of a typical Jungle song?
+
+```{r}
+
+# Get track information
+good_enough <-
+  get_tidy_audio_analysis("6tTn8EkWFZJHkuDXLI3Hzg") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+
+# Make the chromagram. Use manhattan, euclidean, chebyshev
+chroma_good_enough <- good_enough %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+# Add lines and text at key moments
+chroma_good_enough +
+  geom_vline(xintercept = 45,
+             color = "red",
+             size = 0.8) +
+  geom_vline(xintercept = 154,
+             color = "red",
+             size = 0.8) + 
+  geom_vline(xintercept = 176,
+             color = "red",
+             size = 0.8) +
+  geom_vline(xintercept = 265,
+             color = "red",
+             size = 0.8) +
+  annotate(geom="text", 
+          x=45, 
+          y="A", 
+          label="First drop",
+          color="red",
+          fontface = 2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=154, 
+          y="B", 
+          label="Breakdown",
+          color="red",
+          fontface=2,
+          hjust=1) +
+  annotate(geom="text", 
+          x=176, 
+          y="A", 
+          label="Second drop",
+          color="red",
+          fontface=2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=265, 
+          y="B", 
+          label="Breakdown",
+          color="red",
+          fontface=2,
+          hjust=1)
+
+```
+
+***
+
+*Track: Good Enough - Serial Killaz*
+
+Blablabla
+
+
+
+### Conclusion / Discussion (In construction)
+
+In construction
+
+***
+
+Panel is in construction
