@@ -170,7 +170,7 @@ The first genre that stands out in Figure 2 is HeavyDnB. As predicted, it become
 
 
 
-### What about tempo differences?
+### What about tempo differences? (In construction)
 
 ```{r}
 
@@ -192,7 +192,7 @@ In construction
 
 
 
-### Chromagram Comparison 1 - What does the general buildup of a Light Drum & Bass track look like?
+### Chromagram Comparison 1 - What does the general build up of a Light Drum & Bass track look like?
 
 ```{r}
 
@@ -270,7 +270,14 @@ chroma_fall_to_you +
 
 *Track: Falls to you VIP - Calibre*
 
-Komt nog
+This track was chosen because it shows some aspects that usually are present in Light Drum & Bass tracks. The intro of the song lasts from the beginning until the first drop. What stands out here is that the intro is relatively long, it lasts approximately 90 seconds. Light Drum & Bass tracks usually have a longer intro than other genres because the average build up is very slow. 
+
+The middle part of the song starts after the first drop. This is usually the part where a consistent 'Drum & Bass' drum pattern is played until the next breakdown. A number of samples are then layered on top of each other. This creates the unique sound of the song. The samples used in this genre contains a lot of harmonic and melodic grooves, which makes this genre very pleasant to listen to.
+This pattern of a drop followed by a breakdown is then repeated one more time. There could be small variations of the samples used, but in general, this second part sounds the same as the first.
+
+After the second breakdown, one final chord is played to indicate that the song has come to an end. This is the typical way a Light Drum & Bass track ends.
+
+
 
 ### Chromagram Comparison 2 - And for Heavy Drum & Bass?
 
@@ -298,7 +305,7 @@ chroma_faceless <- faceless %>%
     )
   ) +
   geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  labs(x = "Time (s)", y = NULL , fill = "Magnitude") +
   theme_minimal() +
   scale_fill_viridis_c()
 
@@ -352,7 +359,12 @@ chroma_faceless +
 
 *Track: Faceless - Phace, Was A Be*
 
-Uitleggg
+The intro of this song shows how a typical Heavy Drum & Bass track starts. The drops are usually more intense. This means that the build up to the drop starts early in the song. You can see this in the first part of the chromagram. The notes that are played (yellow) seem to have a staircase-like form. Playing a higher note each time will make the listener anticipate more and more to the drop. 
+
+The middle part of tracks are unique in the sense that the underlying 'Drum & Bass' drum pattern becomes harder to recognize. Lots of deep basslines and samples with heavy electronic melodies are used in this part. Also, vocals are not used. This is why the chromagram looks so consistent.
+Nothing interesting happens after the first breakdown. Just a few tones are played, and after a while a similar build up as before the first drop is used to anticipate towards the second drop.
+
+The ending of the track starts after the second breakdown. Sometimes a Heavy Drum & Bass track ends instantly after the second breakdown. But in this case, a final sample (which still sounds pretty restless) is introduced prior to the breakdown. At some point the main samples stop, and the final sample is played for a short time before ending.
 
 
 
@@ -433,7 +445,11 @@ chroma_good_enough +
 
 *Track: Good Enough - Serial Killaz*
 
-Blablabla
+This track would be the average 'Jungle' track. A 'Drum & Bass' drum pattern starts a few seconds after the song begins. Unfortunately, this is not really visible in the chromagram.
+
+In this genre, drops are usually introduced by vocals. The vocal part begins, and a bassline is added so that the track sounds more 'complete'. The chromagram's pattern of the middle parts of this track seem different when compared to the other tracks discussed, because vocals are included here. The vocals and the samples have their own sound, this is why multiple notes show a high magnitude (yellow). 
+
+It is common for Jungle tracks to end the song by using the same samples as in the intro of the track.
 
 
 
