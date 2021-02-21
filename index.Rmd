@@ -16,6 +16,8 @@ library(ggthemes)
 library(compmus)
 library(remotes)
 library(plotly)
+library(viridis)
+library(hrbrthemes)
 ```
 
 ### Introduction
@@ -110,27 +112,31 @@ all_music = subset(all_music, select = -c(playlist_id, playlist_img, playlist_ow
 
 
 
-### How often are voices used in each genre?
+### Which genre uses the most vocals?
 
 ```{r echo=FALSE}
 
 # Histogram instrumentalness per genre
-instrumentalness_per_genre <- ggplot(all_music, 
-                                     aes(instrumentalness)
-                                     ) +       
-  geom_histogram(binwidth = 0.05,
-                 position = "dodge") +
-  facet_wrap(~ category) +
-  theme_tufte() +
-  labs(x = "Instrumentalness",
-       y = "Count",
-       title = "Instrumentalness per genre",
-       caption = "Figure 1") +
-  theme(legend.position = "none")
-  
-instrumentalness_per_genre
+instrumentalness <- all_music %>%
+  ggplot( aes(x=instrumentalness, 
+              y=category, 
+              fill=category, 
+              color=category,)) +
+    geom_violin(width=1.6, size=0.5) +
+    labs(x = "Instrumentalness",
+         title = "",
+         subtitle = "The distribution of instrumentalness per genre",
+         caption = "Figure 1"
+         ) + 
+    scale_fill_viridis(discrete=TRUE) +
+    scale_color_viridis(discrete=TRUE) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      axis.title.y = element_blank()
+    ) 
 
-
+instrumentalness
 ```
 
 ***
@@ -139,7 +145,7 @@ Instrumentalness predicts whether a track contains vocals or not. A value of 0.5
 
 
 
-### Is a certain genre more positive or energetic than other genres?
+### Is one genre more positive or energetic than the other?
 
 ```{r echo=FALSE}
 
@@ -170,19 +176,28 @@ The first genre that stands out in Figure 2 is HeavyDnB. As predicted, it become
 
 
 
-### What about tempo differences? (In construction)
+### Which genre is most popular? (In construction)
 
 ```{r}
 
-# Attempt plot tempo vs loudness
+# Attempt plot track popularity vs .... danceability, instrumentalness
 
-all_music %>% ggplot(aes(x = loudness, 
-                         y = tempo,
-                         color = category
+test <- all_music %>% ggplot(aes(x = instrumentalness, 
+                         y = track.popularity,
+                         color = category,
+                         size = speechiness
                          )) +
   geom_point(alpha = 0.5)  +
-    scale_y_continuous(
-      limits = c(170, 180))
+  geom_smooth() +
+  geom_jitter(alpha = 0.5) +
+  theme_light() +
+  scale_x_continuous(
+    limits = c(0, 1)
+                     ) +
+  scale_y_continuous(
+    limits = c(0, 50)) 
+
+test
 
 ```
 
@@ -368,7 +383,7 @@ The ending of the track starts after the second breakdown. Sometimes a Heavy Dru
 
 
 
-### Chromagram Comparison 3 - Now what is different in the buildup of a typical Jungle song?
+### Chromagram Comparison 3 - Now, what is different in the build up of a typical Jungle song?
 
 ```{r}
 
