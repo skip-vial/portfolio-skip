@@ -18,9 +18,10 @@ library(remotes)
 library(plotly)
 library(viridis)
 library(hrbrthemes)
+library(plyr)
 ```
 
-### Introduction
+### Welcome to my portfolio!
 
 *Background*
 
@@ -112,9 +113,9 @@ all_music = subset(all_music, select = -c(playlist_id, playlist_img, playlist_ow
 
 
 
-### Which genre uses the most vocals?
+### First, we investigate which genre uses the **most vocals**
 
-```{r echo=FALSE}
+```{r }
 
 # Histogram instrumentalness per genre
 instrumentalness <- all_music %>%
@@ -126,7 +127,7 @@ instrumentalness <- all_music %>%
     labs(x = "Instrumentalness",
          title = "",
          subtitle = "The distribution of instrumentalness per genre",
-         caption = "Figure 1"
+         caption = ""
          ) + 
     scale_fill_viridis(discrete=TRUE) +
     scale_color_viridis(discrete=TRUE) +
@@ -145,7 +146,7 @@ Instrumentalness predicts whether a track contains vocals or not. A value of 0.5
 
 
 
-### Is one genre more positive or energetic than the other?
+### Second, how do **energy** and **valence** of each genre relate to each other?
 
 ```{r echo=FALSE}
 
@@ -154,7 +155,7 @@ energy_valence <- ggplot(all_music,
        aes(energy, 
            valence, 
            color = mode_name)) + # speechiness, acousticness, liveness?
-  geom_point(position = "jitter", alpha = 0.4, shape = 20) +
+  geom_point(position = "jitter", alpha = 0.7, shape = 20) +
   theme_light() +
   facet_wrap(~ category) +
     labs(     
@@ -162,7 +163,7 @@ energy_valence <- ggplot(all_music,
     y = "Valence",
     color = "Mode",
     title = "Energy, valence and mode per genre",
-    caption = "Figure 2"
+    caption = ""
   )
 
 energy_valence
@@ -176,28 +177,36 @@ The first genre that stands out in Figure 2 is HeavyDnB. As predicted, it become
 
 
 
-### Which genre is most popular? (In construction)
+### And the **most popular** genre is...
 
 ```{r}
 
-# Attempt plot track popularity vs .... danceability, instrumentalness
+# Plot track popularity
 
-test <- all_music %>% ggplot(aes(x = instrumentalness, 
-                         y = track.popularity,
-                         color = category,
-                         size = speechiness
+popularity_means <- ddply(all_music, "category", summarise, grp.mean=mean(track.popularity))
+
+
+plot_popularity <- all_music %>% ggplot(aes(x = track.popularity,
+                         fill = category
                          )) +
-  geom_point(alpha = 0.5)  +
-  geom_smooth() +
-  geom_jitter(alpha = 0.5) +
-  theme_light() +
-  scale_x_continuous(
-    limits = c(0, 1)
-                     ) +
-  scale_y_continuous(
-    limits = c(0, 50)) 
+  geom_histogram(binwidth = 1,
+                 alpha = 0.7) +
+  geom_vline(data = popularity_means, aes(xintercept = grp.mean, 
+                                          color = category),
+                                          size = 1,
+                                          alpha = 0.8,
+                                          linetype = "dashed") +
+  labs(title = "The popularity of tracks per genre",
+       x = "Popularity",
+       y = "Count") +
+    scale_fill_viridis(discrete=TRUE) +
+    scale_color_viridis(discrete=TRUE) +
+  theme_ipsum() +
+  theme(legend.title = element_blank())
 
-test
+  ggplotly(plot_popularity)
+  
+ 
 
 ```
 
@@ -207,7 +216,7 @@ In construction
 
 
 
-### Chromagram Comparison 1 - What does the general build up of a Light Drum & Bass track look like?
+### *Chromagram Comparison 1* - What does the general build up of a Light Drum & Bass track look like?
 
 ```{r}
 
@@ -283,18 +292,18 @@ chroma_fall_to_you +
 
 ***
 
-*Track: Falls to you VIP - Calibre*
+*Track: [Falls to you VIP - Calibre](https://open.spotify.com/track/1ObLc50qTIp8gF1Lg2GimH?si=5kqgrc7bQU249rXaCZ9BmQ)*
 
-This track was chosen because it shows some aspects that usually are present in Light Drum & Bass tracks. The intro of the song lasts from the beginning until the first drop. What stands out here is that the intro is relatively long, it lasts approximately 90 seconds. Light Drum & Bass tracks usually have a longer intro than other genres because the average build up is very slow. 
+This track was chosen because it shows some aspects that usually are present in Light Drum & Bass tracks. The intro of the song lasts from the beginning until the first drop. What stands out here is that **the intro is relatively long**, it lasts approximately 90 seconds. Light Drum & Bass tracks usually have a longer intro than other genres because **the average build up is very slow**. 
 
-The middle part of the song starts after the first drop. This is usually the part where a consistent 'Drum & Bass' drum pattern is played until the next breakdown. A number of samples are then layered on top of each other. This creates the unique sound of the song. The samples used in this genre contains a lot of harmonic and melodic grooves, which makes this genre very pleasant to listen to.
+The middle part of the song starts after the first drop. This is usually the part where a consistent 'Drum & Bass' drum pattern is played until the breakdown. A number of **samples are then layered** on top of each other. This creates the unique sound of the song. The samples used in this genre contains a lot of **harmonic and melodic grooves**, which makes this genre very pleasant to listen to.
 This pattern of a drop followed by a breakdown is then repeated one more time. There could be small variations of the samples used, but in general, this second part sounds the same as the first.
 
-After the second breakdown, one final chord is played to indicate that the song has come to an end. This is the typical way a Light Drum & Bass track ends.
+After the second breakdown, **one final chord** is played to indicate that the song has come to an end. This is the typical way a Light Drum & Bass track ends.
 
 
 
-### Chromagram Comparison 2 - And for Heavy Drum & Bass?
+### *Chromagram Comparison 2* - And for Heavy Drum & Bass?
 
 ```{r}
 
@@ -372,18 +381,18 @@ chroma_faceless +
 
 ***
 
-*Track: Faceless - Phace, Was A Be*
+*Track: [Faceless - Phace, Was A Be](https://open.spotify.com/track/2m40HRbLhNf3FeH9ntqQWw?si=5NqhOLJpSZiJIYiQmn1Atw)*
 
-The intro of this song shows how a typical Heavy Drum & Bass track starts. The drops are usually more intense. This means that the build up to the drop starts early in the song. You can see this in the first part of the chromagram. The notes that are played (yellow) seem to have a staircase-like form. Playing a higher note each time will make the listener anticipate more and more to the drop. 
+The intro of this song shows how a typical Heavy Drum & Bass track starts. **The drops are usually more intense**. This means that the build up to the drop starts early in the song. You can see this in the first part of the chromagram. The notes that are played (yellow) seem to have a staircase-like form. Playing a higher note each time will make the listener anticipate more and more to the drop. 
 
-The middle part of tracks are unique in the sense that the underlying 'Drum & Bass' drum pattern becomes harder to recognize. Lots of deep basslines and samples with heavy electronic melodies are used in this part. Also, vocals are not used. This is why the chromagram looks so consistent.
+The middle part of tracks are unique in the sense that the underlying 'Drum & Bass' **drum pattern becomes harder to recognize**. Lots of deep basslines and samples with heavy electronic melodies are used in this part. Also, vocals are not used. This is why the chromagram looks so consistent.
 Nothing interesting happens after the first breakdown. Just a few tones are played, and after a while a similar build up as before the first drop is used to anticipate towards the second drop.
 
-The ending of the track starts after the second breakdown. Sometimes a Heavy Drum & Bass track ends instantly after the second breakdown. But in this case, a final sample (which still sounds pretty restless) is introduced prior to the breakdown. At some point the main samples stop, and the final sample is played for a short time before ending.
+The **ending of the track starts after the second breakdown**. Sometimes a Heavy Drum & Bass track ends instantly after the second breakdown. But in this case, a final sample (which still sounds pretty restless) is introduced prior to the breakdown. At some point the main samples stop, and the final sample is played for a short time before ending.
 
 
 
-### Chromagram Comparison 3 - Now, what is different in the build up of a typical Jungle song?
+### *Chromagram Comparison 3* - Now, what is different in the build up of a typical Jungle song?
 
 ```{r}
 
@@ -458,13 +467,13 @@ chroma_good_enough +
 
 ***
 
-*Track: Good Enough - Serial Killaz*
+*Track: [Good Enough - Serial Killaz](https://open.spotify.com/track/6tTn8EkWFZJHkuDXLI3Hzg?si=eVMR2tO7Ta-UVtvT4_1_xQ)*
 
-This track would be the average 'Jungle' track. A 'Drum & Bass' drum pattern starts a few seconds after the song begins. Unfortunately, this is not really visible in the chromagram.
+This track would be the average 'Jungle' track. A 'Drum & Bass' **drum pattern starts a few seconds after the track begins**. This is played until the first drop.
 
-In this genre, drops are usually introduced by vocals. The vocal part begins, and a bassline is added so that the track sounds more 'complete'. The chromagram's pattern of the middle parts of this track seem different when compared to the other tracks discussed, because vocals are included here. The vocals and the samples have their own sound, this is why multiple notes show a high magnitude (yellow). 
+In this genre, **drops are usually introduced by vocals**. The vocal part begins, and a bassline is added so that the track sounds more 'complete'. The chromagram's pattern of the middle parts of this track seem different when compared to the other tracks discussed, because **vocals are included here**. The vocals and the samples have their own sound, this is why multiple notes show a high magnitude (yellow). 
 
-It is common for Jungle tracks to end the song by using the same samples as in the intro of the track.
+It is common for Jungle tracks to **end the song by using the same samples as in the intro** of the track.
 
 
 
