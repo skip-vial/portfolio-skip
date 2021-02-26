@@ -240,7 +240,7 @@ LightDnB and HeavyDnB also show a somewhat similar distribution. The differences
 
 ### Second, Is it possible that the **presence of vocals influences other features**? 
 
-```{r out.width="110%"}
+```{r }
 
 # Scatterplot energy, valence and danceability
 energy_valence <- ggplot(all_music, 
