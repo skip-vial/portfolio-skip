@@ -5,6 +5,7 @@ date: "Februari 2021"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
+    orientation: rows
 ---
 
 ```{r setup, include=FALSE}
@@ -21,6 +22,90 @@ library(hrbrthemes)
 library(plyr)
 ```
 
+
+
+### *Track Breakdown* - Self-Similarity Matrices of a **Ragga Drum & Bass track**
+
+```{r out.width= "50%"} 
+
+test <-
+  get_tidy_audio_analysis("5jeAriText11q771wlloPR") %>% # Change URI.
+  compmus_align(bars, segments) %>%                     # Change `bars`
+  select(bars) %>%                                      #   in all three
+  unnest(bars) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+# SELF SIMILARITY MATRIX
+compmus_long_distance(
+  test %>% mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  test %>% mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = pitches,
+  method = "euclidean"
+) %>%
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(x = "Time (s)", 
+       y = "Time (s)",
+       title = "Chroma Features") +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL)
+
+# CEPTOGRAM
+test %>%
+  compmus_self_similarity(timbre, "cosine") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "Time (s)", 
+       y = "Time (s)",
+       title = "Timbre Features")
+
+```
+
+***
+
+A track from the Ragga Drum & Bass genre is chosen for the comparison of pitch-based and timbre-based features because tracks from this genre have not been discussed yet.
+
+*Track: [No Diggity - Kursiva, Mooncat, Earth Beat Movement](https://open.spotify.com/track/5jeAriText11q771wlloPR?si=bsTOoXsKT9m4Pp1EOJVTHg)*
+
+Interestingly, there are only small differences between the two self-similarity matrices. This track's **overall structure is very similar** to the structure of tracks that we have discussed. The intro is visible in the lower left corner. Usually, there are diagonal lines in the chroma-based matrix when there is repetition in a track, for example when a chorus is played multiple times. This is not the case for Drum & Bass tracks. **The repetition takes on a different form**, and therefore there are almost no diagonal lines present in the matrix. 
+
+Small changes in texture can be seen in the timbre-based matrix, especially **at approximately 190 seconds**. This section of the track is after a breakdown and is therefore very quiet. Suddenly, a **short and loud electronic melody** is played, which causes the change of color in the timbre-based matrix. This is **not a change in pitch** and therefore the differences are not visible in the pitch-based matrix.
+
+
+
 ### Welcome to my portfolio!
 
 *Background*
@@ -31,7 +116,7 @@ The music genre ‘Jungle’ emerged in the 1990s and is viewed as the direct or
 
 - Light Drum & Bass. Also called Liquid Drum & Bass. Many harmonic and melodic grooves are used, as well as samples from funk, jazz, soul, R&B. Expected is that this subgenre has significant differences from Jungle. Overall, Liquid Drum & Bass is known for its positive energy. This would mean that the acousticness and/or valence of songs are different than in Jungle music.
 
-- Heavy Drum & Bass. This subgenre has a higher average BPM than most other subgenres and has a general ‘dark’ mood, which is realized with deeper basslines and more industrial, hardcore (electronic) melodies.
+- Heavy Drum & Bass. This subgenre has a general ‘dark’ mood, which is realized with deeper basslines and more industrial, hardcore (electronic) melodies.
 
 *** 
 
@@ -113,11 +198,11 @@ all_music = subset(all_music, select = -c(playlist_id, playlist_img, playlist_ow
 
 
 
-### First, we investigate which genre uses the **most vocals**
+###  First, we investigate **how much vocals** are used in each genre
 
 ```{r }
 
-# Histogram instrumentalness per genre
+# Violin plot instrumentalness per genre
 instrumentalness <- all_music %>%
   ggplot( aes(x=instrumentalness, 
               y=category, 
@@ -134,7 +219,10 @@ instrumentalness <- all_music %>%
     theme_ipsum() +
     theme(
       legend.position="none",
-      axis.title.y = element_blank()
+      axis.title.y = element_blank(),
+      plot.subtitle = element_text(face = "bold",
+                                   size = 14),
+      axis.title.x = element_text(size = 10)
     ) 
 
 instrumentalness
@@ -142,29 +230,39 @@ instrumentalness
 
 ***
 
-Instrumentalness predicts whether a track contains vocals or not. A value of 0.5 or higher represents instrumental tracks which means that the track contains no vocal content. Figure 1 shows an expected pattern between the genres. The genres Jungle and RaggaDnB are very similar and both contain mostly vocal tracks. As HeavyDnB is known for its darker mood and deep basslines, which usually means that there is little room for vocals in a track. Results in Figure 1 confirm this. Lastly, instrumentalness values for the LightDnB genre show an even distribution. This indicates that there is a large variety of tracks within this genre regarding vocals.
+
+
+Instrumentalness predicts whether a track contains vocals or not. A value of 0.5 or higher represents a track that contains no vocal content. In this plot, **the thickness of the line represents the amount of tracks** that have the same instrumentalness value. This plot shows a pattern between the genres that was expected. The genres **Jungle and RaggaDnB** are very similar and both contain **mostly vocal tracks** since most tracks have an instrumentalness value between 0 and 0.25.  
+
+LightDnB and HeavyDnB also show a somewhat similar distribution. The differences between these genres is that **HeavyDnB contains mostly non-vocal tracks**, where **LightDnB** shows an almost **equal amount of vocal and non-vocal tracks**.
 
 
 
-### Second, how do **energy** and **valence** of each genre relate to each other?
+### Second, Is it possible that the **presence of vocals influences other features**? 
 
-```{r echo=FALSE}
+```{r out.width="110%"}
 
-# Scatterplot energy and valence
+# Scatterplot energy, valence and danceability
 energy_valence <- ggplot(all_music, 
        aes(energy, 
            valence, 
-           color = mode_name)) + # speechiness, acousticness, liveness?
+           color = danceability)) + 
   geom_point(position = "jitter", alpha = 0.7, shape = 20) +
+      scale_fill_viridis(discrete=FALSE) +
+    scale_color_viridis(discrete=FALSE) +
   theme_light() +
   facet_wrap(~ category) +
     labs(     
     x = "Energy",
     y = "Valence",
-    color = "Mode",
-    title = "Energy, valence and mode per genre",
-    caption = ""
-  )
+    color = "Danceability",
+    title = "Energy, valence and danceability per genre",
+    caption = "") +
+      theme(plot.title = element_text(face = "bold",
+                                   size = 14),
+      axis.title.x = element_text(size = 10),
+      axis.title.y = element_text(size = 10)
+    ) 
 
 energy_valence
 
@@ -173,8 +271,27 @@ energy_valence
 
 ***
 
-The first genre that stands out in Figure 2 is HeavyDnB. As predicted, it becomes very clear that this genre consists mostly of tracks with very high energy and a general low valence. On the other hand, expected was that this genre would see a general high valence. However, Figure 2 shows that this is not the case. The amount of tracks with a high valence is approximately equal to the amount of tracks of the HeavyDnB genre. For Jungle and RaggaDnB was expected that these genres are very similar to each other. Both genres have a tendency for high energy and high valence. Lastly, mode was investigated to find additional patterns. Interestingly, mode is evenly distributed in every genre. This indicates that it does not have a significant effect on the valence or energy of a Drum & Bass track.
+***Energy***
 
+The energy value ranges from 0.0 to 1.0. A higher value means that the track feels fast, loud and noisy.
+
+It becomes clear that the genre HeavyDnB consists mostly of tracks with very high energy. This was expected since this genre draws influence from hardcore music, for example. The genres Jungle and RaggaDnB also show many tracks with high energy, possibly because there always is a consistent drum pattern in addition to vocals. LightDnB tracks show more variety in the amount of energy. This is not surprising as this genre is usually has a 'laid-back' feel to it.
+
+***Valence***
+
+Valence describes how positive a track feels. A high valence corresponds to a more happy or euphoric track. Tracks with low valence sound more sad, depressed or angry.
+
+As for valence, the genres can be divided into two groups. HeavyDnB and LightDnB show a tendency for tracks with low valence, whereas Jungle and RaggaDnB consist of tracks with a general high valence. In the first plot we could see the same split between these genres. Is it possible that the presence of vocals influences this other features?
+
+*Note: it is surprising that LightDnB has many tracks with low valence. A general high valence was expected here, since this genre is considered as the more 'feel-good' subgenre of Drum & Bass*.
+
+***Danceability***
+
+Danceability describes how suitable a track is for dancing. A value of 0.0 means that the track is least danceable and a value of 1.0 is most danceable. In this plot, a light color represents a high danceability and a dark color represents low danceability.
+
+The genres can be divided in the same manner as with valence. Jungle and RaggaDnB have more tracks than HeavyDnB and LightDnB that are considered 'danceable' by Spotify. 
+
+Now why is that? The biggest difference measured between the genres is that Jungle and RaggaDnB often have vocals in tracks, whereas HeavyDnB and Light DnB have more non-vocal tracks. It is possible that there is a relationship between the presence of vocals and the features described here. Possibly, **the presence of vocals positively influences valence and/or danceability**. 
 
 
 ### And the **most popular** genre is...
@@ -202,11 +319,12 @@ plot_popularity <- all_music %>% ggplot(aes(x = track.popularity,
     scale_fill_viridis(discrete=TRUE) +
     scale_color_viridis(discrete=TRUE) +
   theme_ipsum() +
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank()
+        )
 
   ggplotly(plot_popularity)
   
- 
+
 
 ```
 
@@ -247,43 +365,43 @@ chroma_fall_to_you <- fall_to_you %>%
 # Add lines and text at key moments
 chroma_fall_to_you +
   geom_vline(xintercept = 89,
-             color = "red",
+             color = "white",
              size = 0.8) +
   geom_vline(xintercept = 200,
-             color = "red",
+             color = "white",
              size = 0.8) + 
   geom_vline(xintercept = 223,
-             color = "red",
+             color = "white",
              size = 0.8) +
   geom_vline(xintercept = 356,
-             color = "red",
+             color = "white",
              size = 0.8) +
   annotate(geom="text", 
           x=89, 
           y="A", 
           label="First drop",
-          color="red",
+          color="white",
           fontface = 2,
           hjust=0) +
   annotate(geom="text", 
           x=200, 
           y="B", 
           label="Breakdown",
-          color="red",
+          color="white",
           fontface=2,
           hjust=1) +
   annotate(geom="text", 
           x=223, 
           y="A", 
           label="Second drop",
-          color="red",
+          color="white",
           fontface=2,
           hjust=0) +
   annotate(geom="text", 
           x=356, 
           y="B", 
           label="Breakdown",
-          color="red",
+          color="white",
           fontface=2,
           hjust=1)
 
@@ -336,43 +454,43 @@ chroma_faceless <- faceless %>%
 # Add lines and text at key moments
 chroma_faceless +
   geom_vline(xintercept = 40,
-             color = "red",
+             color = "white",
              size = 0.8) +
   geom_vline(xintercept = 110,
-             color = "red",
+             color = "white",
              size = 0.8) + 
   geom_vline(xintercept = 133,
-             color = "red",
+             color = "white",
              size = 0.8) +
   geom_vline(xintercept = 207,
-             color = "red",
+             color = "white",
              size = 0.8) +
   annotate(geom="text", 
           x=40, 
           y="A", 
           label="First drop",
-          color="red",
+          color="white",
           fontface = 2,
           hjust=0) +
   annotate(geom="text", 
           x=110, 
           y="B", 
           label="Breakdown",
-          color="red",
+          color="white",
           fontface=2,
           hjust=1) +
   annotate(geom="text", 
           x=133, 
           y="A", 
           label="Second drop",
-          color="red",
+          color="white",
           fontface=2,
           hjust=0) +
   annotate(geom="text", 
           x=207, 
           y="B", 
           label="Breakdown",
-          color="red",
+          color="white",
           fontface=2,
           hjust=1)
 
@@ -423,43 +541,43 @@ chroma_good_enough <- good_enough %>%
 # Add lines and text at key moments
 chroma_good_enough +
   geom_vline(xintercept = 45,
-             color = "red",
+             color = "white",
              size = 0.8) +
   geom_vline(xintercept = 154,
-             color = "red",
+             color = "white",
              size = 0.8) + 
   geom_vline(xintercept = 176,
-             color = "red",
+             color = "white",
              size = 0.8) +
   geom_vline(xintercept = 265,
-             color = "red",
+             color = "white",
              size = 0.8) +
   annotate(geom="text", 
           x=45, 
           y="A", 
           label="First drop",
-          color="red",
+          color="white",
           fontface = 2,
           hjust=0) +
   annotate(geom="text", 
           x=154, 
           y="B", 
           label="Breakdown",
-          color="red",
+          color="white",
           fontface=2,
           hjust=1) +
   annotate(geom="text", 
           x=176, 
           y="A", 
           label="Second drop",
-          color="red",
+          color="white",
           fontface=2,
           hjust=0) +
   annotate(geom="text", 
           x=265, 
           y="B", 
           label="Breakdown",
-          color="red",
+          color="white",
           fontface=2,
           hjust=1)
 
