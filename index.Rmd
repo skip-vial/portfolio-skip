@@ -22,87 +22,380 @@ library(hrbrthemes)
 library(plyr)
 ```
 
+```{r templates}
+
+# Make the key profiles
+circshift <- function(v, n) {
+  if (n == 0) v else c(tail(v, n), head(v, -n))
+}
+
+#      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
+major_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    0,    0)
+minor_chord <-
+  c(   1,    0,    0,    1,    0,    0,    0,    1,    0,    0,    0,    0)
+seventh_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    1,    0)
+
+major_key <-
+  c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key <-
+  c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+
+chord_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:7", circshift(seventh_chord, 6),
+    "Gb:maj", circshift(major_chord, 6),
+    "Bb:min", circshift(minor_chord, 10),
+    "Db:maj", circshift(major_chord, 1),
+    "F:min", circshift(minor_chord, 5),
+    "Ab:7", circshift(seventh_chord, 8),
+    "Ab:maj", circshift(major_chord, 8),
+    "C:min", circshift(minor_chord, 0),
+    "Eb:7", circshift(seventh_chord, 3),
+    "Eb:maj", circshift(major_chord, 3),
+    "G:min", circshift(minor_chord, 7),
+    "Bb:7", circshift(seventh_chord, 10),
+    "Bb:maj", circshift(major_chord, 10),
+    "D:min", circshift(minor_chord, 2),
+    "F:7", circshift(seventh_chord, 5),
+    "F:maj", circshift(major_chord, 5),
+    "A:min", circshift(minor_chord, 9),
+    "C:7", circshift(seventh_chord, 0),
+    "C:maj", circshift(major_chord, 0),
+    "E:min", circshift(minor_chord, 4),
+    "G:7", circshift(seventh_chord, 7),
+    "G:maj", circshift(major_chord, 7),
+    "B:min", circshift(minor_chord, 11),
+    "D:7", circshift(seventh_chord, 2),
+    "D:maj", circshift(major_chord, 2),
+    "F#:min", circshift(minor_chord, 6),
+    "A:7", circshift(seventh_chord, 9),
+    "A:maj", circshift(major_chord, 9),
+    "C#:min", circshift(minor_chord, 1),
+    "E:7", circshift(seventh_chord, 4),
+    "E:maj", circshift(major_chord, 4),
+    "G#:min", circshift(minor_chord, 8),
+    "B:7", circshift(seventh_chord, 11),
+    "B:maj", circshift(major_chord, 11),
+    "D#:min", circshift(minor_chord, 3)
+  )
+
+key_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:maj", circshift(major_key, 6),
+    "Bb:min", circshift(minor_key, 10),
+    "Db:maj", circshift(major_key, 1),
+    "F:min", circshift(minor_key, 5),
+    "Ab:maj", circshift(major_key, 8),
+    "C:min", circshift(minor_key, 0),
+    "Eb:maj", circshift(major_key, 3),
+    "G:min", circshift(minor_key, 7),
+    "Bb:maj", circshift(major_key, 10),
+    "D:min", circshift(minor_key, 2),
+    "F:maj", circshift(major_key, 5),
+    "A:min", circshift(minor_key, 9),
+    "C:maj", circshift(major_key, 0),
+    "E:min", circshift(minor_key, 4),
+    "G:maj", circshift(major_key, 7),
+    "B:min", circshift(minor_key, 11),
+    "D:maj", circshift(major_key, 2),
+    "F#:min", circshift(minor_key, 6),
+    "A:maj", circshift(major_key, 9),
+    "C#:min", circshift(minor_key, 1),
+    "E:maj", circshift(major_key, 4),
+    "G#:min", circshift(minor_key, 8),
+    "B:maj", circshift(major_key, 11),
+    "D#:min", circshift(minor_key, 3)
+  )
+
+```
 
 
-### *Track Breakdown* - Self-Similarity Matrices of a **Ragga Drum & Bass track**
+### NEW! *Chromagram Comparison 1* - What does the general build up of a **Light Drum & Bass** track look like?
 
-```{r out.width= "50%"} 
+```{r out.width="50%"}
 
-test <-
-  get_tidy_audio_analysis("5jeAriText11q771wlloPR") %>% # Change URI.
-  compmus_align(bars, segments) %>%                     # Change `bars`
-  select(bars) %>%                                      #   in all three
-  unnest(bars) %>%                                      #   of these lines.
+# Get track information
+fall_to_you <-
+  get_tidy_audio_analysis("1ObLc50qTIp8gF1Lg2GimH") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+
+# Make the chromagram. Use manhattan, euclidean, chebyshev
+chroma_fall_to_you <- fall_to_you %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", 
+       y = NULL, 
+       fill = "Magnitude",
+       title = "Chromagram") +
+  theme_minimal() +
+  scale_fill_viridis_c() +
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14))
+
+# Add lines and text at key moments
+chroma_fall_to_you +
+  geom_vline(xintercept = 89,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 200,
+             color = "white",
+             size = 0.8) + 
+  geom_vline(xintercept = 223,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 356,
+             color = "white",
+             size = 0.8) +
+  annotate(geom="text", 
+          x=89, 
+          y="A", 
+          label="First drop",
+          color="white",
+          fontface = 2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=200, 
+          y="B", 
+          label="Breakdown",
+          color="white",
+          fontface=2,
+          hjust=1) +
+  annotate(geom="text", 
+          x=223, 
+          y="A", 
+          label="Second drop",
+          color="white",
+          fontface=2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=356, 
+          y="B", 
+          label="Breakdown",
+          color="white",
+          fontface=2,
+          hjust=1)
+
+
+
+# KEYGRAM
+light_keygram <-
+  get_tidy_audio_analysis("1ObLc50qTIp8gF1Lg2GimH") %>%
+  compmus_align(sections, segments) %>%
+  select(sections) %>%
+  unnest(sections) %>%
   mutate(
     pitches =
       map(segments,
         compmus_summarise, pitches,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
-      )
-  ) %>%
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
+        method = "mean", norm = "manhattan"
       )
   )
 
-# SELF SIMILARITY MATRIX
-compmus_long_distance(
-  test %>% mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  test %>% mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  feature = pitches,
-  method = "euclidean"
-) %>%
+light_keygram %>% 
+  compmus_match_pitch_template(
+    key_templates,         # Change to chord_templates if descired
+    method = "euclidean",  # Try different distance metrics
+    norm = "manhattan"     # Try different norms
+  ) %>%
   ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
   ) +
   geom_tile() +
-  coord_equal() +
-  labs(x = "Time (s)", 
-       y = "Time (s)",
-       title = "Chroma Features") +
-  theme_minimal() +
-  scale_fill_viridis_c(guide = NULL)
-
-# CEPTOGRAM
-test %>%
-  compmus_self_similarity(timbre, "cosine") %>% 
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  coord_fixed() +
   scale_fill_viridis_c(guide = "none") +
-  theme_classic() +
-  labs(x = "Time (s)", 
-       y = "Time (s)",
-       title = "Timbre Features")
+  theme_minimal() +
+  labs(x = "Time (s)", y = "",
+       title = "Keygram") + 
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14)) +
+    geom_vline(xintercept = 89,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 200,
+             color = "white",
+             size = 0.8) + 
+  geom_vline(xintercept = 223,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 356,
+             color = "white",
+             size = 0.8)
+
 
 ```
 
 ***
 
-A track from the Ragga Drum & Bass genre is chosen for the comparison of pitch-based and timbre-based features because tracks from this genre have not been discussed yet.
+*Track: [Falls to you VIP - Calibre](https://open.spotify.com/track/1ObLc50qTIp8gF1Lg2GimH?si=5kqgrc7bQU249rXaCZ9BmQ)*
 
-*Track: [No Diggity - Kursiva, Mooncat, Earth Beat Movement](https://open.spotify.com/track/5jeAriText11q771wlloPR?si=bsTOoXsKT9m4Pp1EOJVTHg)*
+***Chromagram***
 
-Interestingly, there are only small differences between the two self-similarity matrices. This track's **overall structure is very similar** to the structure of tracks that we have discussed. The intro is visible in the lower left corner. Usually, there are diagonal lines in the chroma-based matrix when there is repetition in a track, for example when a chorus is played multiple times. This is not the case for Drum & Bass tracks. **The repetition takes on a different form**, and therefore there are almost no diagonal lines present in the matrix. 
+This track was chosen because it shows some aspects that usually are present in Light Drum & Bass tracks. The intro of the song lasts from the beginning until the first drop. What stands out here is that **the intro is relatively long**, it lasts approximately 90 seconds. Light Drum & Bass tracks usually have a longer intro than other genres because **the average build up is very slow**. 
 
-Small changes in texture can be seen in the timbre-based matrix, especially **at approximately 190 seconds**. This section of the track is after a breakdown and is therefore very quiet. Suddenly, a **short and loud electronic melody** is played, which causes the change of color in the timbre-based matrix. This is **not a change in pitch** and therefore the differences are not visible in the pitch-based matrix.
+The middle part of the song starts after the first drop. This is usually the part where a consistent 'Drum & Bass' drum pattern is played until the breakdown. A number of **samples are then layered** on top of each other. This creates the unique sound of the song. The samples used in this genre contains a lot of **harmonic and melodic grooves**, which makes this genre very pleasant to listen to.
+This pattern of a drop followed by a breakdown is then repeated one more time. There could be small variations of the samples used, but in general, this second part sounds the same as the first.
+
+After the second breakdown, **one final chord** is played to indicate that the song has come to an end. This is the typical way a Light Drum & Bass track ends.
+
+***Keygram***
+
+In the keygram we can see that the **intro is in the key of Dmaj or Dmin**. Usually the key is consistent in a Drum & Bass track, but the program finds it very hard to determine the key in the middle sections. It is possible that the many harmonies layered on top of each other make it very hard to determine one specific key. Additionally, this music is made with exclusively electronically generated sounds and **Spotify might have trouble analyzing** this when compared to actual chords played by a guitar.
+
+
+### NEW! *Chromagram Comparison 2* - And for **Heavy Drum & Bass**? Comparing a **chromagram** to a **chordogram**
+
+```{r out.width="50%"}
+
+# Get track information
+faceless <-
+  get_tidy_audio_analysis("2m40HRbLhNf3FeH9ntqQWw") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+
+
+
+# Make the chromagram. Use manhattan, euclidean, chebyshev
+chroma_faceless <- faceless %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL , fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c() +
+  labs(title = "Chromagram") +
+   theme(plot.title = element_text(face = "bold",
+                                   size = 14))
+
+# Add lines and text at key moments
+chroma_faceless +
+  geom_vline(xintercept = 40,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 110,
+             color = "white",
+             size = 0.8) + 
+  geom_vline(xintercept = 133,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 207,
+             color = "white",
+             size = 0.8) +
+  annotate(geom="text", 
+          x=40, 
+          y="A", 
+          label="First drop",
+          color="white",
+          fontface = 2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=110, 
+          y="B", 
+          label="Breakdown",
+          color="white",
+          fontface=2,
+          hjust=1) +
+  annotate(geom="text", 
+          x=133, 
+          y="A", 
+          label="Second drop",
+          color="white",
+          fontface=2,
+          hjust=0) +
+  annotate(geom="text", 
+          x=207, 
+          y="B", 
+          label="Breakdown",
+          color="white",
+          fontface=2,
+          hjust=1)
+
+
+# KEYGRAM
+# Fetch analysis for a track
+twenty_five <-
+  get_tidy_audio_analysis("2m40HRbLhNf3FeH9ntqQWw") %>%
+  compmus_align(bars, segments) %>%
+  select(bars) %>%
+  unnest(bars) %>%
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      )
+  )
+
+# Key or Chord 
+twenty_five %>% 
+  compmus_match_pitch_template(
+    chord_templates,         # Change to chord_templates if desired
+    method = "angular",    # Try different distance metrics
+    norm = "euclidean"     # Try different norms
+  ) %>%
+  ggplot(
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
+  ) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "",
+       title = "Chordogram") +
+   theme(plot.title = element_text(face = "bold",
+                                   size = 14)) +
+  geom_vline(xintercept = 40,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 110,
+             color = "white",
+             size = 0.8) + 
+  geom_vline(xintercept = 133,
+             color = "white",
+             size = 0.8) +
+  geom_vline(xintercept = 207,
+             color = "white",
+             size = 0.8)
+
+```
+
+***
+
+*Track: [Faceless - Phace, Was A Be](https://open.spotify.com/track/2m40HRbLhNf3FeH9ntqQWw?si=5NqhOLJpSZiJIYiQmn1Atw)*
+
+***Chromagram***
+
+The intro of this song shows how a typical Heavy Drum & Bass track starts. **The drops are usually more intense**. This means that the build up to the drop starts early in the song. You can see this in the first part of the chromagram. The notes that are played (yellow) seem to have a staircase-like form. Playing a higher note each time will make the listener anticipate more and more to the drop. 
+
+The middle part of tracks are unique in the sense that the underlying 'Drum & Bass' **drum pattern becomes harder to recognize**. Lots of deep basslines and samples with heavy electronic melodies are used in this part. Also, vocals are not used. This is why the chromagram looks so consistent.
+Nothing interesting happens after the first breakdown. Just a few tones are played, and after a while a similar build up as before the first drop is used to anticipate towards the second drop.
+
+The **ending of the track starts after the second breakdown**. Sometimes a Heavy Drum & Bass track ends instantly after the second breakdown. But in this case, a final sample (which still sounds pretty restless) is introduced prior to the breakdown. At some point the main samples stop, and the final sample is played for a short time before ending.
+
+***Chordogram***
+
+For reference, the white vertical lines are also placed in the chordogram. During the buildup towards the first drop, the chordogram is quite messy. You can see that something else is going on, but it is hard to determine what is happening. We can see that in general, the **chords used in the track stay consistent**, even during the intro (this is not visible in the chromagram). 
 
 
 
@@ -273,13 +566,13 @@ energy_valence
 
 ***Energy***
 
-The energy value ranges from 0.0 to 1.0. A higher value means that the track feels fast, loud and noisy.
+*The energy value ranges from 0.0 to 1.0. A higher value means that the track feels fast, loud and noisy.*
 
 It becomes clear that the genre HeavyDnB consists mostly of tracks with very high energy. This was expected since this genre draws influence from hardcore music, for example. The genres Jungle and RaggaDnB also show many tracks with high energy, possibly because there always is a consistent drum pattern in addition to vocals. LightDnB tracks show more variety in the amount of energy. This is not surprising as this genre is usually has a 'laid-back' feel to it.
 
 ***Valence***
 
-Valence describes how positive a track feels. A high valence corresponds to a more happy or euphoric track. Tracks with low valence sound more sad, depressed or angry.
+*Valence describes how positive a track feels. A high valence corresponds to a more happy or euphoric track. Tracks with low valence sound more sad, depressed or angry.*
 
 As for valence, the genres can be divided into two groups. HeavyDnB and LightDnB show a tendency for tracks with low valence, whereas Jungle and RaggaDnB consist of tracks with a general high valence. In the first plot we could see the same split between these genres. Is it possible that the presence of vocals influences this other features?
 
@@ -287,7 +580,7 @@ As for valence, the genres can be divided into two groups. HeavyDnB and LightDnB
 
 ***Danceability***
 
-Danceability describes how suitable a track is for dancing. A value of 0.0 means that the track is least danceable and a value of 1.0 is most danceable. In this plot, a light color represents a high danceability and a dark color represents low danceability.
+*Danceability describes how suitable a track is for dancing. In this plot, a light color represents a high danceability and a dark color represents low danceability.*
 
 The genres can be divided in the same manner as with valence. Jungle and RaggaDnB have more tracks than HeavyDnB and LightDnB that are considered 'danceable' by Spotify. 
 
@@ -330,187 +623,19 @@ plot_popularity <- all_music %>% ggplot(aes(x = track.popularity,
 
 ***
 
-In construction
+*The popularity of a track is a value between 0 and 100, with 100 being the most popular. Generally speaking, songs that are being played a lot now will have a higher popularity than songs that were played a lot in the past.*
 
 
 
-### *Chromagram Comparison 1* - What does the general build up of a Light Drum & Bass track look like?
-
-```{r}
-
-# Get track information
-fall_to_you <-
-  get_tidy_audio_analysis("1ObLc50qTIp8gF1Lg2GimH") %>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
-
-# Make the chromagram. Use manhattan, euclidean, chebyshev
-chroma_fall_to_you <- fall_to_you %>%
-  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
-  compmus_gather_chroma() %>% 
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = pitch_class,
-      fill = value
-    )
-  ) +
-  geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  theme_minimal() +
-  scale_fill_viridis_c()
-
-# Add lines and text at key moments
-chroma_fall_to_you +
-  geom_vline(xintercept = 89,
-             color = "white",
-             size = 0.8) +
-  geom_vline(xintercept = 200,
-             color = "white",
-             size = 0.8) + 
-  geom_vline(xintercept = 223,
-             color = "white",
-             size = 0.8) +
-  geom_vline(xintercept = 356,
-             color = "white",
-             size = 0.8) +
-  annotate(geom="text", 
-          x=89, 
-          y="A", 
-          label="First drop",
-          color="white",
-          fontface = 2,
-          hjust=0) +
-  annotate(geom="text", 
-          x=200, 
-          y="B", 
-          label="Breakdown",
-          color="white",
-          fontface=2,
-          hjust=1) +
-  annotate(geom="text", 
-          x=223, 
-          y="A", 
-          label="Second drop",
-          color="white",
-          fontface=2,
-          hjust=0) +
-  annotate(geom="text", 
-          x=356, 
-          y="B", 
-          label="Breakdown",
-          color="white",
-          fontface=2,
-          hjust=1)
-
-
-```
-
-***
-
-*Track: [Falls to you VIP - Calibre](https://open.spotify.com/track/1ObLc50qTIp8gF1Lg2GimH?si=5kqgrc7bQU249rXaCZ9BmQ)*
-
-This track was chosen because it shows some aspects that usually are present in Light Drum & Bass tracks. The intro of the song lasts from the beginning until the first drop. What stands out here is that **the intro is relatively long**, it lasts approximately 90 seconds. Light Drum & Bass tracks usually have a longer intro than other genres because **the average build up is very slow**. 
-
-The middle part of the song starts after the first drop. This is usually the part where a consistent 'Drum & Bass' drum pattern is played until the breakdown. A number of **samples are then layered** on top of each other. This creates the unique sound of the song. The samples used in this genre contains a lot of **harmonic and melodic grooves**, which makes this genre very pleasant to listen to.
-This pattern of a drop followed by a breakdown is then repeated one more time. There could be small variations of the samples used, but in general, this second part sounds the same as the first.
-
-After the second breakdown, **one final chord** is played to indicate that the song has come to an end. This is the typical way a Light Drum & Bass track ends.
 
 
 
-### *Chromagram Comparison 2* - And for Heavy Drum & Bass?
-
-```{r}
-
-# Get track information
-faceless <-
-  get_tidy_audio_analysis("2m40HRbLhNf3FeH9ntqQWw") %>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
 
 
 
-# Make the chromagram. Use manhattan, euclidean, chebyshev
-chroma_faceless <- faceless %>%
-  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
-  compmus_gather_chroma() %>% 
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = pitch_class,
-      fill = value
-    )
-  ) +
-  geom_tile() +
-  labs(x = "Time (s)", y = NULL , fill = "Magnitude") +
-  theme_minimal() +
-  scale_fill_viridis_c()
-
-# Add lines and text at key moments
-chroma_faceless +
-  geom_vline(xintercept = 40,
-             color = "white",
-             size = 0.8) +
-  geom_vline(xintercept = 110,
-             color = "white",
-             size = 0.8) + 
-  geom_vline(xintercept = 133,
-             color = "white",
-             size = 0.8) +
-  geom_vline(xintercept = 207,
-             color = "white",
-             size = 0.8) +
-  annotate(geom="text", 
-          x=40, 
-          y="A", 
-          label="First drop",
-          color="white",
-          fontface = 2,
-          hjust=0) +
-  annotate(geom="text", 
-          x=110, 
-          y="B", 
-          label="Breakdown",
-          color="white",
-          fontface=2,
-          hjust=1) +
-  annotate(geom="text", 
-          x=133, 
-          y="A", 
-          label="Second drop",
-          color="white",
-          fontface=2,
-          hjust=0) +
-  annotate(geom="text", 
-          x=207, 
-          y="B", 
-          label="Breakdown",
-          color="white",
-          fontface=2,
-          hjust=1)
 
 
-```
-
-***
-
-*Track: [Faceless - Phace, Was A Be](https://open.spotify.com/track/2m40HRbLhNf3FeH9ntqQWw?si=5NqhOLJpSZiJIYiQmn1Atw)*
-
-The intro of this song shows how a typical Heavy Drum & Bass track starts. **The drops are usually more intense**. This means that the build up to the drop starts early in the song. You can see this in the first part of the chromagram. The notes that are played (yellow) seem to have a staircase-like form. Playing a higher note each time will make the listener anticipate more and more to the drop. 
-
-The middle part of tracks are unique in the sense that the underlying 'Drum & Bass' **drum pattern becomes harder to recognize**. Lots of deep basslines and samples with heavy electronic melodies are used in this part. Also, vocals are not used. This is why the chromagram looks so consistent.
-Nothing interesting happens after the first breakdown. Just a few tones are played, and after a while a similar build up as before the first drop is used to anticipate towards the second drop.
-
-The **ending of the track starts after the second breakdown**. Sometimes a Heavy Drum & Bass track ends instantly after the second breakdown. But in this case, a final sample (which still sounds pretty restless) is introduced prior to the breakdown. At some point the main samples stop, and the final sample is played for a short time before ending.
-
-
-
-### *Chromagram Comparison 3* - Now, what is different in the build up of a typical Jungle song?
+### *Chromagram Comparison 3* - Now, what is different in the build up of a typical **Jungle** song?
 
 ```{r}
 
@@ -534,8 +659,10 @@ chroma_good_enough <- good_enough %>%
     )
   ) +
   geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude", title = "Chromagram") +
   theme_minimal() +
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14)) +
   scale_fill_viridis_c()
 
 # Add lines and text at key moments
@@ -592,6 +719,92 @@ This track would be the average 'Jungle' track. A 'Drum & Bass' **drum pattern s
 In this genre, **drops are usually introduced by vocals**. The vocal part begins, and a bassline is added so that the track sounds more 'complete'. The chromagram's pattern of the middle parts of this track seem different when compared to the other tracks discussed, because **vocals are included here**. The vocals and the samples have their own sound, this is why multiple notes show a high magnitude (yellow). 
 
 It is common for Jungle tracks to **end the song by using the same samples as in the intro** of the track.
+
+
+
+### *Track Breakdown* - Self-Similarity Matrices of a **Ragga Drum & Bass track**
+
+```{r out.width= "50%"} 
+
+test <-
+  get_tidy_audio_analysis("5jeAriText11q771wlloPR") %>% # Change URI.
+  compmus_align(bars, segments) %>%                     # Change `bars`
+  select(bars) %>%                                      #   in all three
+  unnest(bars) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+# CHROMA BASED SSM
+compmus_long_distance(
+  test %>% mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  test %>% mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = pitches,
+  method = "euclidean"
+) %>%
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(x = "Time (s)", 
+       y = "Time (s)",
+       title = "Chroma Features") +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL) +
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14)) 
+
+# TIMBRE BASED SSM
+test %>%
+  compmus_self_similarity(timbre, "cosine") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "Time (s)", 
+       y = "Time (s)",
+       title = "Timbre Features") +
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14))
+
+```
+
+***
+
+A track from the Ragga Drum & Bass genre is chosen for the comparison of pitch-based and timbre-based features because tracks from this genre have not been discussed yet.
+
+*Track: [No Diggity - Kursiva, Mooncat, Earth Beat Movement](https://open.spotify.com/track/5jeAriText11q771wlloPR?si=bsTOoXsKT9m4Pp1EOJVTHg)*
+
+Interestingly, there are only small differences between the two self-similarity matrices. This track's **overall structure is very similar** to the structure of tracks that we have discussed. The intro is visible in the lower left corner. Usually, there are diagonal lines in the chroma-based matrix when there is repetition in a track, for example when a chorus is played multiple times. This is not the case for Drum & Bass tracks. **The repetition takes on a different form**, and therefore there are almost no diagonal lines present in the matrix. 
+
+Small changes in texture can be seen in the timbre-based matrix, especially **at approximately 190 seconds**. This section of the track is after a breakdown and is therefore very quiet. Suddenly, a **short and loud electronic melody** is played, which causes the change of color in the timbre-based matrix. This is **not a change in pitch** and therefore the differences are not visible in the pitch-based matrix.
 
 
 
