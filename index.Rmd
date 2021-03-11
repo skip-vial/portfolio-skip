@@ -114,7 +114,266 @@ key_templates <-
 ```
 
 
-### NEW! *Chromagram Comparison 1* - What does the general build up of a **Light Drum & Bass** track look like?
+
+### NEW! The **overall average tempo** of Jungle and Drum & Bass
+
+```{r}
+
+temp_jungle <- get_tidy_audio_analysis("5UeLuozsBQbBj1MmB6joHz")
+
+temp_jungle %>%
+  tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) %>%
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", 
+       y = "Tempo (BPM)",
+       title = "Tempogram") +
+  theme_classic() +
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14))
+
+```
+
+***
+
+*Track: [Turn Down the Lights - Benny Page](https://open.spotify.com/track/5UeLuozsBQbBj1MmB6joHz?si=nLP_Qj3_RWCSgqE0we7q5w)*
+
+The tempogram of this track represents the average tempo of the majority of Jungle and Drum & Bass tracks. We can see **three lines in the tempogram** at equal distance from each other, where the middle line is the thick yellow line at around 350 BPM. The **actual tempo** of the track is represented by the lowest line, which is around **170 BPM**. This shows that Jungle as well as Drum & Bass tracks have a very high tempo compared to other music genres. 
+
+The fast nature of these genres could be explained by the fact that all sounds and samples are played via an electronic device. Musicians could have trouble playing at this tempo because it would be very uncomfortable to play on an instrument that fast. But for these music genres, a DJ can easily **adjust the tempo by turning a button**. The electronic device has no trouble of any kind in speeding up or slowing down the samples that are played. This might be an important factor in why Jungle and Drum & Bass are at such a high tempo.
+
+*(Note: the idea was to show a tempogram for the average track of each genre, but unfortunately this takes a considerable amount of time to load. Also, after viewing the tempograms individually, the averages are so close together that the tempograms do not differ that much. Therefore only one tempogram was chosen to represent the tempo of the corpus.)*
+
+
+
+### Welcome to my portfolio!
+
+*Background*
+
+The music genre ‘Jungle’ emerged in the 1990s and is viewed as the direct originating point for the newer music genre named ‘Drum & Bass’ (emerged mid 1990s). These two genres are commonly used as synonyms for one another. Almost 30 years have passed since these genres were developed. During this time the Drum & Bass genre has grown significantly in terms of exposure and now knows many subgenres, while Jungle music did not make the same growth and lost popularity. What caused this turn of events? Has Drum & Bass become more popular because of its diversity? Can we still use the terms ‘Jungle’ and ‘Drum & Bass’ as synonyms or has Drum & Bass developed in such a way that it has become completely different from its originating point? This corpus analysis attempts to answer these questions by comparing Jungle music to various subgenres of Drum & Bass music:
+
+- Ragga Drum & Bass. This subgenre was inspired by the original Ragga Jungle style, which was very popular at the time. Expected is that this genre is most similar to the original Jungle music.
+
+- Light Drum & Bass. Also called Liquid Drum & Bass. Many harmonic and melodic grooves are used, as well as samples from funk, jazz, soul, R&B. Expected is that this subgenre has significant differences from Jungle. Overall, Liquid Drum & Bass is known for its positive energy. This would mean that the acousticness and/or valence of songs are different than in Jungle music.
+
+- Heavy Drum & Bass. This subgenre has a general ‘dark’ mood, which is realized with deeper basslines and more industrial, hardcore (electronic) melodies.
+
+*** 
+
+*Corpus*
+
+This corpus uses genre-based Spotify Playlists.
+
+- Jungle:
+  - JUNGLE / RAGGA DNB / JUNGLE REVIVAL
+  - Tracks: 125
+  
+- Ragga DnB: 
+  - Ragga Drum and Bass
+  - Tracks: 115
+  
+- Light DnB:
+  - Liquid Drum and Bass 	
+  - Tracks: 100
+  
+- Heavy DnB:
+  - Neurofunk Drum & Bass
+  - NEUROFUNK 2021 // Updated Weekly
+  - Tracks: 113
+  
+
+```{r echo=FALSE}
+
+### Import Spotify Playlists ###
+Jungle <- get_playlist_audio_features("", "4Xq7CHKa693iezbOXH8NOQ")
+
+RaggaDnB <- get_playlist_audio_features("", "0ix8qCnYCiu4w8OcnK0Uqu")
+
+LightDnB <- get_playlist_audio_features("", "5ABMzUESx7K7EyowE5kFCl")
+
+Heavy1 <- get_playlist_audio_features("", "7Dx1mjAUeV8ElB5FERajkl")
+Heavy2 <- get_playlist_audio_features("", "0Po1Xhn50bsrQwyjXWMMKJ")
+
+
+### Combine datasets per subgenre ###
+HeavyDnB <-
+  bind_rows(
+    Heavy1 %>% mutate(category = "Heavy1"),
+    Heavy2 %>% mutate(category = "Heavy2")
+  )
+
+
+### Final final universal dataframe ###
+all_music <-
+  bind_rows(
+      Jungle %>% mutate(category = "Jungle"),
+      RaggaDnB %>% mutate(category = "RaggaDnB"),
+      LightDnB %>% mutate(category = "LightDnB"),
+      HeavyDnB %>% mutate(category = "HeavyDnB")
+  )
+
+### Delete useless columns ###
+all_music = subset(all_music, select = -c(playlist_id, playlist_img, playlist_owner_name,
+                                    playlist_owner_id, track.id, analysis_url,
+                                    is_local, primary_color, added_by.href,
+                                    added_by.id, added_by.type, added_by.uri,
+                                    added_by.external_urls.spotify, track.artists,
+                                    track.available_markets, track.disc_number,
+                                    track.episode, track.explicit, track.href,
+                                    track.is_local, track.preview_url, track.track,
+                                    track.track_number, track.type, track.uri,
+                                    track.album.album_type, track.album.artists,
+                                    track.album.available_markets, track.album.href,
+                                    track.album.id, track.album.images, 
+                                    track.album.name, added_at,
+                                    track.album.release_date_precision,
+                                    track.album.total_tracks, track.album.type,
+                                    track.album.uri, track.album.external_urls.spotify,
+                                    track.external_ids.isrc, 
+                                    track.external_urls.spotify, video_thumbnail.url
+                                    ))
+
+
+```
+
+
+
+###  First, we investigate **how much vocals** are used in each genre
+
+```{r }
+
+# Violin plot instrumentalness per genre
+instrumentalness <- all_music %>%
+  ggplot( aes(x=instrumentalness, 
+              y=category, 
+              fill=category, 
+              color=category,)) +
+    geom_violin(width=1.6, size=0.5) +
+    labs(x = "Instrumentalness",
+         title = "",
+         subtitle = "The distribution of instrumentalness per genre",
+         caption = ""
+         ) + 
+    scale_fill_viridis(discrete=TRUE) +
+    scale_color_viridis(discrete=TRUE) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      axis.title.y = element_blank(),
+      plot.subtitle = element_text(face = "bold",
+                                   size = 14),
+      axis.title.x = element_text(size = 10)
+    ) 
+
+instrumentalness
+```
+
+***
+
+Instrumentalness predicts whether a track contains vocals or not. A value of 0.5 or higher represents a track that contains no vocal content. In this plot, **the thickness of the line represents the amount of tracks** that have the same instrumentalness value. This plot shows a pattern between the genres that was expected. The genres **Jungle and RaggaDnB** are very similar and both contain **mostly vocal tracks** since most tracks have an instrumentalness value between 0 and 0.25.  
+
+LightDnB and HeavyDnB also show a somewhat similar distribution. The differences between these genres is that **HeavyDnB contains mostly non-vocal tracks**, where **LightDnB** shows an almost **equal amount of vocal and non-vocal tracks**.
+
+
+
+### Second, Is it possible that the **presence of vocals influences other features**? 
+
+```{r }
+
+# Scatterplot energy, valence and danceability
+energy_valence <- ggplot(all_music, 
+       aes(energy, 
+           valence, 
+           color = danceability)) + 
+  geom_point(position = "jitter", alpha = 0.7, shape = 20) +
+      scale_fill_viridis(discrete=FALSE) +
+    scale_color_viridis(discrete=FALSE) +
+  theme_light() +
+  facet_wrap(~ category) +
+    labs(     
+    x = "Energy",
+    y = "Valence",
+    color = "Danceability",
+    title = "Energy, valence and danceability per genre",
+    caption = "") +
+      theme(plot.title = element_text(face = "bold",
+                                   size = 14),
+      axis.title.x = element_text(size = 10),
+      axis.title.y = element_text(size = 10)
+    ) 
+
+energy_valence
+
+
+```
+
+***
+
+***Energy***
+
+*The energy value ranges from 0.0 to 1.0. A higher value means that the track feels fast, loud and noisy.*
+
+It becomes clear that the genre HeavyDnB consists mostly of tracks with very high energy. This was expected since this genre draws influence from hardcore music, for example. The genres Jungle and RaggaDnB also show many tracks with high energy, possibly because there always is a consistent drum pattern in addition to vocals. LightDnB tracks show more variety in the amount of energy. This is not surprising as this genre is usually has a 'laid-back' feel to it.
+
+***Valence***
+
+*Valence describes how positive a track feels. A high valence corresponds to a more happy or euphoric track. Tracks with low valence sound more sad, depressed or angry.*
+
+As for valence, the genres can be divided into two groups. HeavyDnB and LightDnB show a tendency for tracks with low valence, whereas Jungle and RaggaDnB consist of tracks with a general high valence. In the first plot we could see the same split between these genres. Is it possible that the presence of vocals influences this other features?
+
+*Note: it is surprising that LightDnB has many tracks with low valence. A general high valence was expected here, since this genre is considered as the more 'feel-good' subgenre of Drum & Bass*.
+
+***Danceability***
+
+*Danceability describes how suitable a track is for dancing. In this plot, a light color represents a high danceability and a dark color represents low danceability.*
+
+The genres can be divided in the same manner as with valence. Jungle and RaggaDnB have more tracks than HeavyDnB and LightDnB that are considered 'danceable' by Spotify. 
+
+Now why is that? The biggest difference measured between the genres is that Jungle and RaggaDnB often have vocals in tracks, whereas HeavyDnB and Light DnB have more non-vocal tracks. It is possible that there is a relationship between the presence of vocals and the features described here. Possibly, **the presence of vocals positively influences valence and/or danceability**. 
+
+
+### And the **most popular** genre is...
+
+```{r}
+
+# Plot track popularity
+
+popularity_means <- ddply(all_music, "category", summarise, grp.mean=mean(track.popularity))
+
+
+plot_popularity <- all_music %>% ggplot(aes(x = track.popularity,
+                         fill = category
+                         )) +
+  geom_histogram(binwidth = 1,
+                 alpha = 0.7) +
+  geom_vline(data = popularity_means, aes(xintercept = grp.mean, 
+                                          color = category),
+                                          size = 1,
+                                          alpha = 0.8,
+                                          linetype = "dashed") +
+  labs(title = "The popularity of tracks per genre",
+       x = "Popularity",
+       y = "Count") +
+    scale_fill_viridis(discrete=TRUE) +
+    scale_color_viridis(discrete=TRUE) +
+  theme_ipsum() +
+  theme(legend.title = element_blank()
+        )
+
+  ggplotly(plot_popularity)
+  
+
+
+```
+
+***
+
+*The popularity of a track is a value between 0 and 100, with 100 being the most popular. Generally speaking, songs that are being played a lot now will have a higher popularity than songs that were played a lot in the past.*
+
+
+
+### *Chromagram Comparison 1* - What does the general build up of a **Light Drum & Bass** track look like?
 
 ```{r out.width="50%"}
 
@@ -256,7 +515,7 @@ After the second breakdown, **one final chord** is played to indicate that the s
 In the keygram we can see that the **intro is in the key of Dmaj or Dmin**. Usually the key is consistent in a Drum & Bass track, but the program finds it very hard to determine the key in the middle sections. It is possible that the many harmonies layered on top of each other make it very hard to determine one specific key. Additionally, this music is made with exclusively electronically generated sounds and **Spotify might have trouble analyzing** this when compared to actual chords played by a guitar.
 
 
-### NEW! *Chromagram Comparison 2* - And for **Heavy Drum & Bass**? Comparing a **chromagram** to a **chordogram**
+### *Chromagram Comparison 2* - And for **Heavy Drum & Bass**? Comparing a **chromagram** to a **chordogram**
 
 ```{r out.width="50%"}
 
@@ -396,242 +655,6 @@ The **ending of the track starts after the second breakdown**. Sometimes a Heavy
 ***Chordogram***
 
 For reference, the white vertical lines are also placed in the chordogram. During the buildup towards the first drop, the chordogram is quite messy. You can see that something else is going on, but it is hard to determine what is happening. We can see that in general, the **chords used in the track stay consistent**, even during the intro (this is not visible in the chromagram). 
-
-
-
-### Welcome to my portfolio!
-
-*Background*
-
-The music genre ‘Jungle’ emerged in the 1990s and is viewed as the direct originating point for the newer music genre named ‘Drum & Bass’ (emerged mid 1990s). These two genres are commonly used as synonyms for one another. Almost 30 years have passed since these genres were developed. During this time the Drum & Bass genre has grown significantly in terms of exposure and now knows many subgenres, while Jungle music did not make the same growth and lost popularity. What caused this turn of events? Has Drum & Bass become more popular because of its diversity? Can we still use the terms ‘Jungle’ and ‘Drum & Bass’ as synonyms or has Drum & Bass developed in such a way that it has become completely different from its originating point? This corpus analysis attempts to answer these questions by comparing Jungle music to various subgenres of Drum & Bass music:
-
-- Ragga Drum & Bass. This subgenre was inspired by the original Ragga Jungle style, which was very popular at the time. Expected is that this genre is most similar to the original Jungle music.
-
-- Light Drum & Bass. Also called Liquid Drum & Bass. Many harmonic and melodic grooves are used, as well as samples from funk, jazz, soul, R&B. Expected is that this subgenre has significant differences from Jungle. Overall, Liquid Drum & Bass is known for its positive energy. This would mean that the acousticness and/or valence of songs are different than in Jungle music.
-
-- Heavy Drum & Bass. This subgenre has a general ‘dark’ mood, which is realized with deeper basslines and more industrial, hardcore (electronic) melodies.
-
-*** 
-
-*Corpus*
-
-This corpus uses genre-based Spotify Playlists.
-
-- Jungle:
-  - JUNGLE / RAGGA DNB / JUNGLE REVIVAL
-  - Tracks: 125
-  
-- Ragga DnB: 
-  - Ragga Drum and Bass
-  - Tracks: 115
-  
-- Light DnB:
-  - Liquid Drum and Bass 	
-  - Tracks: 100
-  
-- Heavy DnB:
-  - Neurofunk Drum & Bass
-  - NEUROFUNK 2021 // Updated Weekly
-  - Tracks: 113
-  
-
-```{r echo=FALSE}
-
-### Import Spotify Playlists ###
-Jungle <- get_playlist_audio_features("", "4Xq7CHKa693iezbOXH8NOQ")
-
-RaggaDnB <- get_playlist_audio_features("", "0ix8qCnYCiu4w8OcnK0Uqu")
-
-LightDnB <- get_playlist_audio_features("", "5ABMzUESx7K7EyowE5kFCl")
-
-Heavy1 <- get_playlist_audio_features("", "7Dx1mjAUeV8ElB5FERajkl")
-Heavy2 <- get_playlist_audio_features("", "0Po1Xhn50bsrQwyjXWMMKJ")
-
-
-### Combine datasets per subgenre ###
-HeavyDnB <-
-  bind_rows(
-    Heavy1 %>% mutate(category = "Heavy1"),
-    Heavy2 %>% mutate(category = "Heavy2")
-  )
-
-
-### Final final universal dataframe ###
-all_music <-
-  bind_rows(
-      Jungle %>% mutate(category = "Jungle"),
-      RaggaDnB %>% mutate(category = "RaggaDnB"),
-      LightDnB %>% mutate(category = "LightDnB"),
-      HeavyDnB %>% mutate(category = "HeavyDnB")
-  )
-
-### Delete useless columns ###
-all_music = subset(all_music, select = -c(playlist_id, playlist_img, playlist_owner_name,
-                                    playlist_owner_id, track.id, analysis_url,
-                                    is_local, primary_color, added_by.href,
-                                    added_by.id, added_by.type, added_by.uri,
-                                    added_by.external_urls.spotify, track.artists,
-                                    track.available_markets, track.disc_number,
-                                    track.episode, track.explicit, track.href,
-                                    track.is_local, track.preview_url, track.track,
-                                    track.track_number, track.type, track.uri,
-                                    track.album.album_type, track.album.artists,
-                                    track.album.available_markets, track.album.href,
-                                    track.album.id, track.album.images, 
-                                    track.album.name, added_at,
-                                    track.album.release_date_precision,
-                                    track.album.total_tracks, track.album.type,
-                                    track.album.uri, track.album.external_urls.spotify,
-                                    track.external_ids.isrc, 
-                                    track.external_urls.spotify, video_thumbnail.url
-                                    ))
-
-
-```
-
-
-
-###  First, we investigate **how much vocals** are used in each genre
-
-```{r }
-
-# Violin plot instrumentalness per genre
-instrumentalness <- all_music %>%
-  ggplot( aes(x=instrumentalness, 
-              y=category, 
-              fill=category, 
-              color=category,)) +
-    geom_violin(width=1.6, size=0.5) +
-    labs(x = "Instrumentalness",
-         title = "",
-         subtitle = "The distribution of instrumentalness per genre",
-         caption = ""
-         ) + 
-    scale_fill_viridis(discrete=TRUE) +
-    scale_color_viridis(discrete=TRUE) +
-    theme_ipsum() +
-    theme(
-      legend.position="none",
-      axis.title.y = element_blank(),
-      plot.subtitle = element_text(face = "bold",
-                                   size = 14),
-      axis.title.x = element_text(size = 10)
-    ) 
-
-instrumentalness
-```
-
-***
-
-
-
-Instrumentalness predicts whether a track contains vocals or not. A value of 0.5 or higher represents a track that contains no vocal content. In this plot, **the thickness of the line represents the amount of tracks** that have the same instrumentalness value. This plot shows a pattern between the genres that was expected. The genres **Jungle and RaggaDnB** are very similar and both contain **mostly vocal tracks** since most tracks have an instrumentalness value between 0 and 0.25.  
-
-LightDnB and HeavyDnB also show a somewhat similar distribution. The differences between these genres is that **HeavyDnB contains mostly non-vocal tracks**, where **LightDnB** shows an almost **equal amount of vocal and non-vocal tracks**.
-
-
-
-### Second, Is it possible that the **presence of vocals influences other features**? 
-
-```{r }
-
-# Scatterplot energy, valence and danceability
-energy_valence <- ggplot(all_music, 
-       aes(energy, 
-           valence, 
-           color = danceability)) + 
-  geom_point(position = "jitter", alpha = 0.7, shape = 20) +
-      scale_fill_viridis(discrete=FALSE) +
-    scale_color_viridis(discrete=FALSE) +
-  theme_light() +
-  facet_wrap(~ category) +
-    labs(     
-    x = "Energy",
-    y = "Valence",
-    color = "Danceability",
-    title = "Energy, valence and danceability per genre",
-    caption = "") +
-      theme(plot.title = element_text(face = "bold",
-                                   size = 14),
-      axis.title.x = element_text(size = 10),
-      axis.title.y = element_text(size = 10)
-    ) 
-
-energy_valence
-
-
-```
-
-***
-
-***Energy***
-
-*The energy value ranges from 0.0 to 1.0. A higher value means that the track feels fast, loud and noisy.*
-
-It becomes clear that the genre HeavyDnB consists mostly of tracks with very high energy. This was expected since this genre draws influence from hardcore music, for example. The genres Jungle and RaggaDnB also show many tracks with high energy, possibly because there always is a consistent drum pattern in addition to vocals. LightDnB tracks show more variety in the amount of energy. This is not surprising as this genre is usually has a 'laid-back' feel to it.
-
-***Valence***
-
-*Valence describes how positive a track feels. A high valence corresponds to a more happy or euphoric track. Tracks with low valence sound more sad, depressed or angry.*
-
-As for valence, the genres can be divided into two groups. HeavyDnB and LightDnB show a tendency for tracks with low valence, whereas Jungle and RaggaDnB consist of tracks with a general high valence. In the first plot we could see the same split between these genres. Is it possible that the presence of vocals influences this other features?
-
-*Note: it is surprising that LightDnB has many tracks with low valence. A general high valence was expected here, since this genre is considered as the more 'feel-good' subgenre of Drum & Bass*.
-
-***Danceability***
-
-*Danceability describes how suitable a track is for dancing. In this plot, a light color represents a high danceability and a dark color represents low danceability.*
-
-The genres can be divided in the same manner as with valence. Jungle and RaggaDnB have more tracks than HeavyDnB and LightDnB that are considered 'danceable' by Spotify. 
-
-Now why is that? The biggest difference measured between the genres is that Jungle and RaggaDnB often have vocals in tracks, whereas HeavyDnB and Light DnB have more non-vocal tracks. It is possible that there is a relationship between the presence of vocals and the features described here. Possibly, **the presence of vocals positively influences valence and/or danceability**. 
-
-
-### And the **most popular** genre is...
-
-```{r}
-
-# Plot track popularity
-
-popularity_means <- ddply(all_music, "category", summarise, grp.mean=mean(track.popularity))
-
-
-plot_popularity <- all_music %>% ggplot(aes(x = track.popularity,
-                         fill = category
-                         )) +
-  geom_histogram(binwidth = 1,
-                 alpha = 0.7) +
-  geom_vline(data = popularity_means, aes(xintercept = grp.mean, 
-                                          color = category),
-                                          size = 1,
-                                          alpha = 0.8,
-                                          linetype = "dashed") +
-  labs(title = "The popularity of tracks per genre",
-       x = "Popularity",
-       y = "Count") +
-    scale_fill_viridis(discrete=TRUE) +
-    scale_color_viridis(discrete=TRUE) +
-  theme_ipsum() +
-  theme(legend.title = element_blank()
-        )
-
-  ggplotly(plot_popularity)
-  
-
-
-```
-
-***
-
-*The popularity of a track is a value between 0 and 100, with 100 being the most popular. Generally speaking, songs that are being played a lot now will have a higher popularity than songs that were played a lot in the past.*
-
-
-
-
-
-
-
-
 
 
 
