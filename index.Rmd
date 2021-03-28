@@ -179,136 +179,6 @@ key_templates <-
 
 
 
-### NEW! Which **features** are important in **distinguishing the genres**?
-
-```{r out.width="50%"}
-
-# Make the functions
-get_conf_mat <- function(fit) {
-  outcome <- .get_tune_outcome_names(fit)
-  fit %>% 
-    collect_predictions() %>% 
-    conf_mat(truth = outcome, estimate = .pred_class)
-}  
-
-get_pr <- function(fit) {
-  fit %>% 
-    conf_mat_resampled() %>% 
-    group_by(Prediction) %>% mutate(precision = Freq / sum(Freq)) %>% 
-    group_by(Truth) %>% mutate(recall = Freq / sum(Freq)) %>% 
-    ungroup() %>% filter(Prediction == Truth) %>% 
-    select(class = Prediction, precision, recall)
-}
-
-# Summarise the vectors
-dnb_features <-
-  dnb %>%  # For your portfolio, change this to the name of your corpus.
-  add_audio_analysis() %>% 
-  mutate(
-    playlist = factor(playlist),
-    segments = map2(segments, key, compmus_c_transpose),
-    pitches =
-      map(
-        segments,
-        compmus_summarise, pitches,
-        method = "mean", norm = "manhattan"
-      ),
-    timbre =
-      map(
-        segments,
-        compmus_summarise, timbre,
-        method = "mean",
-      )
-  ) %>%
-  mutate(pitches = map(pitches, compmus_normalise, "clr")) %>%
-  mutate_at(vars(pitches, timbre), map, bind_rows) %>%
-  unnest(cols = c(pitches, timbre))
-
-# Choosing useful variables for predicting 
-dnb_recipe <-
-  recipe(
-    playlist ~
-      danceability +
-      energy +
-      speechiness +
-      acousticness +
-      instrumentalness +
-      valence +
-      duration +
-      C + `C#|Db` + D + `D#|Eb` +
-      E + `F` + `F#|Gb` + G +
-      `G#|Ab` + A + `A#|Bb` + B +
-      c01 + c02 + c03 + c04 + c05 + c06 +
-      c07 + c08 + c09 + c10 + c11 + c12,
-    data = dnb_features,          # Use the same name as the previous block.
-  ) %>%
-  step_center(all_predictors()) %>%
-  step_scale(all_predictors())      # Converts to z-scores.
-  # step_range(all_predictors())    # Sets range to [0, 1].
-
-# Set up cross validation
-dnb_cv <- dnb_features %>% vfold_cv(5)
-
-# k-model
-knn_model <-
-  nearest_neighbor(neighbors = 1) %>%
-  set_mode("classification") %>% 
-  set_engine("kknn")
-dnb_knn <- 
-  workflow() %>% 
-  add_recipe(dnb_recipe) %>% 
-  add_model(knn_model) %>% 
-  fit_resamples(
-    dnb_cv, 
-    control = control_resamples(save_pred = TRUE)
-  )
-
-# Figure showing distribution
-dnb_knn %>% get_conf_mat() %>% autoplot(type = "mosaic") +
-  labs(
-    title = "Predicting the playlist of each track"
-  ) +
-  theme(plot.title = element_text(face = "bold",
-                                   size = 14)) 
-
-# second plot
-dnb_features %>%
-  ggplot(aes(x = valence, y = c08, colour = playlist, size = instrumentalness)) +
-  geom_point(alpha = 0.8) +
-  scale_color_viridis_d() +
-  labs(
-    x = "Valence",
-    y = "Timbre Component 8",
-    size = "Instrumentalness",
-    colour = "Playlist",
-    title = "Most important feature differences"
-  ) +
-  theme_light() +
-  theme(plot.title = element_text(face = "bold",
-                                   size = 14)) 
-
-```
-
-***
-
-***Mosaic plot (left)***
-
-It is interesting to investigate if an **algorithm** would classify each track and predict in which of the four Drum & Bass playlists the track belongs. If the algorithm is mainly correct, it means that the playlists significantly differ from each other. For the computer to be able to handle the computation, only the **top 25 tracks of each playlist were compared** to each other. On the other hand, including more tracks would increase content validity, but I believe that a quarter of each playlist is sufficient to gain significant results.
-
-The results of the algorithm are presented in the plot on the left. The length of a 'block' shows the amount of tracks which the algorithm thinks it belongs to the genre. If the genre of the largest block matches the genre of the 'truth' on the bottom, the algorithm did well in predicting the genre. We can see that the algorithm did moderately well for HeavyDnB. Around 50% of the tracks were correctly predicted as HeavyDnB. **The algorithm performed the best for LightDnB**. The overwhelming majority of LightDnB tracks was identified as a LightDnB track.
-
-**The algorithm was not able to distinguish Jungle from RaggaDnB**. We can see for both genres that there is an almost even divide. So apparently, Jungle and RaggaDnB do not differ that much from each other.
-
-***Main feature differences***
-
-So, how can this be explained? In the right plot, we look at the three most important features with which the algorithm determined in which genre the tracks belong. First, we can see clearly that **LightDnB separates itself with Timbre Component 8** (around the value 0). It's great that there is such a clear divide, but unfortunately we will never know what Timbre Component 8 exactly entails. The three remaining genres all mainly have a Timbre Component 8 of zero or higher. 
-
-Next, **HeavyDnB is separated by instrumentalness and valence**. HeavyDnB tracks are mostly placed at the left of the plot, which indicates a general low valence. Additionally, where Jungle and RaggaDnB have low instrumentalness (smaller dots), HeavyDnB is very instrumental (bigger dots). 
-
-Lastly, it becomes evident from this plot that **Jungle and RaggaDnB cannot be distinguished from each other** by the most important features. When looking at the plot, you can see that LightDnB and HeavyDnB seem to have their own space, but it is very hard to say the same for Jungle and RaggaDnB since there is significant overlap between the two.
-
-
-
 ### Welcome to my portfolio!
 
 *Background*
@@ -978,10 +848,151 @@ The tempogram of this track represents the average tempo of the majority of Jung
 
 
 
-### Conclusion / Discussion (In construction)
+### Which **features** are most important in **distinguishing the genres**?
 
-In construction
+```{r out.width="50%"}
+
+# Make the functions
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit %>% 
+    collect_predictions() %>% 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit %>% 
+    conf_mat_resampled() %>% 
+    group_by(Prediction) %>% mutate(precision = Freq / sum(Freq)) %>% 
+    group_by(Truth) %>% mutate(recall = Freq / sum(Freq)) %>% 
+    ungroup() %>% filter(Prediction == Truth) %>% 
+    select(class = Prediction, precision, recall)
+}
+
+# Summarise the vectors
+dnb_features <-
+  dnb %>%  # For your portfolio, change this to the name of your corpus.
+  add_audio_analysis() %>% 
+  mutate(
+    playlist = factor(playlist),
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(
+        segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean",
+      )
+  ) %>%
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) %>%
+  mutate_at(vars(pitches, timbre), map, bind_rows) %>%
+  unnest(cols = c(pitches, timbre))
+
+# Choosing useful variables for predicting 
+dnb_recipe <-
+  recipe(
+    playlist ~
+      danceability +
+      energy +
+      speechiness +
+      acousticness +
+      instrumentalness +
+      valence +
+      duration +
+      C + `C#|Db` + D + `D#|Eb` +
+      E + `F` + `F#|Gb` + G +
+      `G#|Ab` + A + `A#|Bb` + B +
+      c01 + c02 + c03 + c04 + c05 + c06 +
+      c07 + c08 + c09 + c10 + c11 + c12,
+    data = dnb_features,          # Use the same name as the previous block.
+  ) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+
+# Set up cross validation
+dnb_cv <- dnb_features %>% vfold_cv(5)
+
+# k-model
+knn_model <-
+  nearest_neighbor(neighbors = 1) %>%
+  set_mode("classification") %>% 
+  set_engine("kknn")
+dnb_knn <- 
+  workflow() %>% 
+  add_recipe(dnb_recipe) %>% 
+  add_model(knn_model) %>% 
+  fit_resamples(
+    dnb_cv, 
+    control = control_resamples(save_pred = TRUE)
+  )
+
+# Figure showing distribution
+dnb_knn %>% get_conf_mat() %>% autoplot(type = "mosaic") +
+  labs(
+    title = "Predicting the playlist of each track"
+  ) +
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14)) 
+
+# second plot
+dnb_features %>%
+  ggplot(aes(x = valence, y = c08, colour = playlist, size = instrumentalness)) +
+  geom_point(alpha = 0.8) +
+  scale_color_viridis_d() +
+  labs(
+    x = "Valence",
+    y = "Timbre Component 8",
+    size = "Instrumentalness",
+    colour = "Playlist",
+    title = "Most important feature differences"
+  ) +
+  theme_light() +
+  theme(plot.title = element_text(face = "bold",
+                                   size = 14)) 
+
+```
 
 ***
 
-Panel is in construction
+***Mosaic plot***
+
+It is interesting to investigate if an **algorithm** would classify each track and predict in which of the four Drum & Bass playlists the track belongs. If the algorithm is mainly correct, it means that the playlists significantly differ from each other. For the computer to be able to handle the computation, only the **top 25 tracks of each playlist were compared** to each other. On the other hand, including more tracks would increase content validity, but I believe that a quarter of each playlist is sufficient to gain significant results.
+
+The results of the algorithm are presented in the plot on the left. The length of a 'block' shows the amount of tracks which the algorithm thinks it belongs to the genre. If the genre of the largest block matches the genre of the 'truth' on the bottom, the algorithm did well in predicting the genre. We can see that the algorithm did moderately well for HeavyDnB. Around 50% of the tracks were correctly predicted as HeavyDnB. **The algorithm performed the best for LightDnB**. The overwhelming majority of LightDnB tracks was identified as a LightDnB track.
+
+**The algorithm was not able to distinguish Jungle from RaggaDnB**. We can see for both genres that there is an almost even divide. So apparently, Jungle and RaggaDnB do not differ that much from each other.
+
+***Main feature differences***
+
+So, how can this be explained? In the right plot, we look at the three most important features with which the algorithm determined in which genre the tracks belong. First, we can see clearly that **LightDnB separates itself with Timbre Component 8** (around the value 0). It's great that there is such a clear divide, but unfortunately we will never know what Timbre Component 8 exactly entails. The three remaining genres all mainly have a Timbre Component 8 of zero or higher. 
+
+Next, **HeavyDnB is separated by instrumentalness and valence**. HeavyDnB tracks are mostly placed at the left of the plot, which indicates a general low valence. Additionally, where Jungle and RaggaDnB have low instrumentalness (smaller dots), HeavyDnB is very instrumental (bigger dots). 
+
+Lastly, it becomes evident from this plot that **Jungle and RaggaDnB cannot be distinguished from each other** by the most important features. When looking at the plot, you can see that LightDnB and HeavyDnB seem to have their own space, but it is very hard to say the same for Jungle and RaggaDnB since there is significant overlap between the two.
+
+
+
+### Final thoughts
+
+When starting this course, I didn't really know what to expect. After learning how much interesting information can be gathered from the Spotify API, I became very motivated in learning how to analyse the music. Besides the interest in analysing music, I've learned a lot in terms of coding. I had a lot of fun doing the assignments because you are able to choose what you want to analyse.
+
+*Results*
+
+I wanted to investigate the differences between Jungle and Drum & Bass music. These are the main findings of the analyses:
+
+- Jungle is very similar to RaggaDnB, but not similar to LightDnB and HeavyDnB.
+- The two 'pairs' of genres are distinguished by instrumentalness, danceability, valence, and energy.
+- The overall structure and tempo is equal for all genres.
+
+Based on these findings, we can answer the question that was asked at the beginning of this course: can the genres Jungle and Drum & Bass still be called synonyms? Over the years, the genres have grown further apart from each other. The subgenre RaggaDnB is still very similar to Jungle, therefore those terms could be used as synonyms. But overall, Jungle and Drum & Bass have become very different genres.
+
+*Limitations*
+
+- We have to be careful in generalizing these results to the whole genre because of the sample size. The external validity of this portfolio could be improved by using bigger playlists / more tracks for each genre.
+- It would also be interesting to include more subgenres of DnB in order to gain more insight in how all subgenres differ from each other.
